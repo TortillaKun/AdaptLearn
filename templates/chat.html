@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaptLearn - Chat</title>
+  <style>
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8e9ec;--muted:#7a7d87;
+  --accent:#6c8fff;--accent2:#a78bfa;--green:#4ade80;--yellow:#fbbf24;--red:#f87171;
+  --font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+body.modo-claro{
+  --bg:#f0f2f7;--surface:#ffffff;--surface2:#e8eaf0;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --text:#1a1c22;--muted:#6b7280;
+}
+body.modo-claro .header{background:#ffffff;border-bottom:1px solid rgba(0,0,0,0.1)}
+body.modo-claro .sidebar{background:#f5f6fa;border-right:1px solid rgba(0,0,0,0.08)}
+body.modo-claro .rendimiento-panel{background:#ebedf2}
+body.modo-claro .msg.user .bubble{background:#e8eeff;border-color:rgba(108,143,255,.3);color:#1a1c22}
+body.modo-claro .msg.ai .bubble{background:#ffffff;border-color:rgba(0,0,0,0.1);color:#1a1c22}
+body.modo-claro .msg.user .msg-avatar{background:#dde2ff;border-color:rgba(108,143,255,.3)}
+body.modo-claro .input-area{background:#f0f2f7}
+body.modo-claro .input-wrap{background:#ffffff;border-color:rgba(0,0,0,0.15)}
+body.modo-claro textarea{color:#1a1c22}
+body.modo-claro .welcome-icon{box-shadow:0 0 40px rgba(108,143,255,.2)}
+body.modo-claro .suggestion{background:#ffffff;border-color:rgba(0,0,0,0.1);color:#1a1c22}
+body.modo-claro .suggestion:hover{background:#eef0ff}
+body.modo-claro .sesion-item:hover{background:#ebedf2}
+body.modo-claro .sesion-titulo{color:#1a1c22}
+body.modo-claro .rend-stat{background:#ffffff;border-color:rgba(0,0,0,0.08)}
+body.modo-claro .notas-panel{background:#ffffff;border-color:rgba(0,0,0,0.12)}
+body.modo-claro .notas-editor{background:#f5f6fa;border-color:rgba(0,0,0,0.12);color:#1a1c22}
+body.modo-claro .modal{background:#ffffff}
+body.modo-claro .practica-panel{background:#ffffff;border-color:rgba(0,0,0,0.1)}
+body.modo-claro .practica-instruccion{background:#f0f2f7}
+body.modo-claro .editor-wrap{background:#f5f6fa;border-color:rgba(0,0,0,0.1)}
+body.modo-claro .editor-textarea{background:#f5f6fa;color:#1a1c22}
+body.modo-claro .editor-header{background:#ebedf2}
+body.modo-claro .output-wrap{background:#f5f6fa}
+body.modo-claro .output-header{background:#ebedf2}
+body.modo-claro .output-content{color:#1a1c22}
+body.modo-claro .code-block{background:#f0f0f0;color:#1a1c22;border-color:rgba(0,0,0,0.1)}
+body.modo-claro .plan-card{background:#ffffff;border-color:rgba(0,0,0,0.1)}
+body.modo-claro .plan-week{border-color:rgba(0,0,0,0.08)}
+body.modo-claro .sesion-dropdown{background:#ffffff}
+body.modo-claro #panelTema{background:#ffffff}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.main-layout{display:flex;flex:1;overflow:hidden}
+/* HEADER */
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.logo{display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600}
+.logo-icon{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.header-right{display:flex;align-items:center;gap:8px}
+.status-pill{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);font-family:var(--mono);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-header{background:var(--surface);border:1px solid var(--border2);border-radius:8px;color:var(--muted);font-family:var(--font);font-size:12px;padding:6px 12px;cursor:pointer;transition:all .2s}
+.btn-header:hover{color:var(--text);border-color:var(--accent)}
+.btn-new{background:rgba(108,143,255,.15);border-color:rgba(108,143,255,.3);color:var(--accent)}
+.btn-detener{color:var(--red)!important;border-color:rgba(248,113,113,.3)!important}
+#badgePerfil{display:none;font-size:11px;padding:4px 10px;border-radius:20px;font-family:var(--mono);background:rgba(167,139,250,.15);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
+#badgeTipo{display:none;font-size:11px;padding:4px 10px;border-radius:20px;font-family:var(--mono);background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+/* SIDEBAR */
+.sidebar{width:260px;border-right:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;transition:width .3s ease}
+.sidebar.collapsed{width:48px}
+.sidebar.collapsed .sidebar-list,
+.sidebar.collapsed .rendimiento-panel,
+.sidebar.collapsed .sidebar-header span,
+.sidebar.collapsed .sidebar-refresh{display:none}
+.sidebar.collapsed .sidebar-header{justify-content:center;padding:12px 0}
+.toggle-sidebar{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:6px;transition:all .2s;flex-shrink:0}
+.toggle-sidebar:hover{color:var(--text);background:var(--surface2)}
+.sidebar.collapsed .toggle-sidebar{margin:0 auto}
+.sidebar-header{padding:12px 14px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.5px;display:flex;justify-content:space-between;align-items:center}
+.sidebar-refresh{font-size:10px;cursor:pointer;color:var(--accent);background:none;border:none;font-family:var(--font)}
+.sidebar-list{flex:1;overflow-y:auto;padding:6px}
+.sidebar-list::-webkit-scrollbar{width:3px}
+.sidebar-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.sesion-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:10px;margin-bottom:3px;border:1px solid transparent;transition:all .2s}
+.sesion-item:hover{background:var(--surface2);border-color:var(--border)}
+.sesion-item-content{flex:1;cursor:pointer;min-width:0}
+.sesion-titulo{font-size:12px;font-weight:500;color:var(--text);margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sesion-meta{font-size:10px;color:var(--muted);font-family:var(--mono);display:flex;gap:6px;flex-wrap:wrap}
+.sesion-badge{font-size:9px;padding:1px 6px;border-radius:10px;background:rgba(108,143,255,.1);color:var(--accent)}
+.sidebar-empty{padding:16px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
+.sesion-menu{position:relative;flex-shrink:0}
+.sesion-menu-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:6px;line-height:1;transition:all .2s}
+.sesion-menu-btn:hover{background:var(--surface2);color:var(--text)}
+.sesion-dropdown{position:absolute;right:0;top:100%;background:var(--surface);border:1px solid var(--border2);border-radius:10px;padding:6px;z-index:50;min-width:150px;box-shadow:0 8px 24px rgba(0,0,0,.5);display:none}
+.sesion-dropdown.open{display:block}
+.sesion-dropdown button{display:flex;align-items:center;gap:8px;width:100%;padding:8px 12px;background:none;border:none;color:var(--text);font-family:var(--font);font-size:12px;cursor:pointer;border-radius:7px;transition:all .2s;text-align:left}
+.sesion-dropdown button:hover{background:rgba(248,113,113,.1);color:var(--red)}
+/* RENDIMIENTO */
+.rendimiento-panel{background:var(--surface2);border-top:1px solid var(--border);padding:12px 14px;flex-shrink:0}
+.rend-title{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:10px;letter-spacing:.5px}
+.rend-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.rend-stat{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center}
+.rend-num{font-size:20px;font-weight:600;color:var(--accent);font-family:var(--mono)}
+.rend-label{font-size:9px;color:var(--muted);margin-top:2px}
+.estilos-wrap{margin-top:8px}
+.estilo-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.estilo-icon{font-size:12px;width:18px;text-align:center;flex-shrink:0}
+.estilo-name{font-size:10px;color:var(--muted);width:72px;flex-shrink:0}
+.estilo-bar-wrap{flex:1;height:5px;background:var(--border2);border-radius:3px;overflow:hidden}
+.estilo-bar-fill{height:100%;border-radius:3px;transition:width .8s ease}
+.estilo-pct{font-size:10px;color:var(--muted);font-family:var(--mono);width:28px;text-align:right;flex-shrink:0}
+.estilo-active .estilo-name{color:var(--text);font-weight:600}
+.estilo-active .estilo-pct{color:var(--accent)}
+/* CHAT */
+.chat-column{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.chat-area{flex:1;overflow-y:auto;padding:24px 0;scroll-behavior:smooth}
+.chat-area::-webkit-scrollbar{width:4px}
+.chat-area::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.messages-wrap{max-width:640px;margin:0 auto;padding:0 20px;display:flex;flex-direction:column;gap:16px}
+/* WELCOME */
+.welcome{text-align:center;padding:30px 20px;animation:fadeUp .6s ease both}
+.welcome-icon{width:52px;height:52px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px;box-shadow:0 0 40px rgba(108,143,255,.25)}
+.welcome h1{font-size:22px;font-weight:600;letter-spacing:-.5px;margin-bottom:8px;background:linear-gradient(135deg,#fff 40%,var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.welcome p{font-size:13px;color:var(--muted);line-height:1.6;max-width:360px;margin:0 auto 24px}
+.suggestion-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:460px;margin:0 auto}
+.suggestion{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--text);cursor:pointer;text-align:left;transition:all .2s;line-height:1.4;font-family:var(--font)}
+.suggestion:hover{border-color:var(--accent);background:#1e2a45;transform:translateY(-1px)}
+.suggestion span{display:block;font-size:16px;margin-bottom:4px}
+/* MENSAJES */
+.msg{display:flex;gap:10px;animation:fadeUp .3s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-avatar{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;margin-top:2px}
+.msg.user{flex-direction:row-reverse}
+.msg.user .msg-avatar{background:#1e2a45;border:1px solid var(--border2)}
+.msg.ai .msg-avatar{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+.msg-content{max-width:85%}
+.bubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.65}
+.msg.user .bubble{background:#1e2a45;border:1px solid rgba(108,143,255,.2);border-bottom-right-radius:3px;color:#d4deff}
+.msg.ai .bubble{background:#1a1c21;border:1px solid var(--border);border-bottom-left-radius:3px}
+.parte-msg{animation:slideIn .4s ease both}
+@keyframes slideIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+/* CHIPS */
+.estilo-chip{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:3px 10px;border-radius:20px;margin-bottom:8px;font-family:var(--mono);font-weight:500}
+.chip-visual{background:rgba(108,143,255,.12);color:var(--accent);border:1px solid rgba(108,143,255,.25)}
+.chip-auditivo{background:rgba(74,222,128,.12);color:var(--green);border:1px solid rgba(74,222,128,.25)}
+.chip-lector{background:rgba(251,191,36,.12);color:var(--yellow);border:1px solid rgba(251,191,36,.25)}
+.chip-kinestesico{background:rgba(248,113,113,.12);color:var(--red);border:1px solid rgba(248,113,113,.25)}
+/* CÓDIGO */
+.code-block{background:#0d1117;border:1px solid var(--border2);border-radius:10px;padding:14px;margin:8px 0;font-family:var(--mono);font-size:12px;color:#e6edf3;overflow-x:auto;line-height:1.6;white-space:pre}
+.code-lang{font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:4px;text-transform:uppercase}
+/* PLAN */
+.plan-card{background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:16px;margin-top:10px}
+.plan-card h3{font-size:12px;font-weight:600;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.plan-week{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.plan-week:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.plan-week-title{font-size:11px;font-weight:600;color:var(--accent2);margin-bottom:6px;font-family:var(--mono)}
+.plan-item{display:flex;gap:6px;margin-bottom:4px;color:var(--text);font-size:12px}
+.plan-item::before{content:'›';color:var(--accent);flex-shrink:0}
+.plan-guardado{font-size:10px;color:var(--green);margin-top:10px;font-family:var(--mono)}
+.btn-practicar{display:inline-flex;align-items:center;gap:8px;margin-top:14px;padding:10px 20px;background:linear-gradient(135deg,var(--green),#22c55e);border:none;border-radius:10px;color:#0a1a0a;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 4px 14px rgba(74,222,128,.3)}
+.btn-practicar:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(74,222,128,.4)}
+/* FUENTES */
+.fuentes-card{background:rgba(74,222,128,.04);border:1px solid rgba(74,222,128,.15);border-radius:10px;padding:12px;margin-top:8px}
+.fuentes-card h4{font-size:11px;font-weight:600;color:var(--green);margin-bottom:8px}
+.fuente-item{font-size:11px;margin-bottom:6px;line-height:1.5}
+.fuente-item a{color:var(--accent);text-decoration:none}
+.fuente-item a:hover{text-decoration:underline}
+.fuente-src{font-size:9px;padding:1px 6px;border-radius:10px;background:rgba(74,222,128,.1);color:var(--green);margin-left:4px;font-family:var(--mono)}
+/* PRÁCTICA */
+.practica-panel{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-top:12px;animation:fadeUp .4s ease both}
+.practica-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.practica-header h3{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}
+.nivel-wrap{display:flex;align-items:center;gap:10px;margin-bottom:14px;background:var(--surface2);border-radius:10px;padding:10px 14px}
+.nivel-label{font-size:11px;color:var(--muted);font-family:var(--mono);flex-shrink:0}
+.nivel-progreso-wrap{flex:1;height:6px;background:var(--border2);border-radius:3px;overflow:hidden}
+.nivel-progreso-fill{height:100%;border-radius:3px;transition:width .5s ease;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.nivel-num{font-size:12px;font-weight:600;color:var(--accent);font-family:var(--mono);flex-shrink:0}
+.ejercicios-contador{font-size:10px;color:var(--muted);font-family:var(--mono);flex-shrink:0}
+.practica-titulo{font-size:13px;font-weight:600;color:var(--accent2);margin-bottom:8px}
+.practica-instruccion{font-size:13px;color:var(--text);line-height:1.6;margin-bottom:12px;padding:12px;background:var(--surface2);border-radius:10px;border-left:3px solid var(--accent)}
+/* PISTAS */
+.pistas-container{margin-bottom:12px}
+.pista-item{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:10px 12px;margin-bottom:6px;font-size:12px;color:var(--text);animation:fadeUp .3s ease both}
+.pista-item strong{color:var(--yellow)}
+.pista-solucion{background:rgba(108,143,255,.06);border:1px solid rgba(108,143,255,.2);border-radius:8px;padding:12px;margin-bottom:8px;font-size:12px;color:var(--text);animation:fadeUp .3s ease both}
+.pista-solucion strong{color:var(--accent)}
+/* EDITOR */
+.editor-wrap{background:#0d1117;border:1px solid var(--border2);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.editor-header{display:flex;align-items:center;justify-content:space-between;padding:8px 14px;background:#161b22;border-bottom:1px solid var(--border2)}
+.editor-lang{font-size:11px;color:var(--muted);font-family:var(--mono)}
+.editor-textarea{width:100%;min-height:120px;background:#0d1117;border:none;outline:none;color:#e6edf3;font-family:var(--mono);font-size:13px;padding:14px;resize:vertical;line-height:1.6}
+.editor-textarea::placeholder{color:#484f58}
+.practica-input{width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;margin-bottom:12px;resize:vertical;min-height:60px;transition:border-color .2s}
+.practica-input:focus{border-color:rgba(108,143,255,.5)}
+.practica-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn-ejecutar{padding:9px 18px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;color:white;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-ejecutar:hover{transform:translateY(-1px)}
+.btn-ejecutar:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-pista{padding:9px 18px;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);border-radius:9px;color:var(--yellow);font-family:var(--font);font-size:12px;cursor:pointer;transition:all .2s}
+.btn-pista:hover{background:rgba(251,191,36,.2)}
+.btn-nuevo-ej{padding:9px 18px;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer;transition:all .2s}
+.btn-nuevo-ej:hover{border-color:var(--accent);color:var(--accent)}
+.nivel-up-banner{background:linear-gradient(135deg,rgba(108,143,255,.15),rgba(167,139,250,.15));border:1px solid rgba(108,143,255,.3);border-radius:12px;padding:16px;text-align:center;margin-bottom:12px;animation:fadeUp .4s ease both}
+.nivel-up-banner h3{font-size:16px;font-weight:600;color:var(--accent);margin-bottom:6px}
+.nivel-up-banner p{font-size:12px;color:var(--muted)}
+/* OUTPUT */
+.output-wrap{margin-top:12px;background:#0d1117;border:1px solid var(--border2);border-radius:10px;overflow:hidden}
+.output-header{padding:8px 14px;background:#161b22;font-size:11px;color:var(--muted);font-family:var(--mono);border-bottom:1px solid var(--border2)}
+.output-content{padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;white-space:pre-wrap;min-height:40px}
+.output-ok{color:var(--green)}
+.output-error{color:var(--red)}
+.eval-result{margin-top:12px;padding:14px;border-radius:10px;font-size:13px;line-height:1.6}
+.eval-ok{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2)}
+.eval-error{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.2)}
+.eval-score{font-size:24px;font-weight:700;font-family:var(--mono);margin-bottom:6px}
+.eval-score.ok{color:var(--green)}
+.eval-score.bad{color:var(--red)}
+/* TYPING */
+.typing{display:flex;align-items:center;gap:4px;padding:12px 14px}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:bounce 1.2s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+/* INPUT */
+.input-area{flex-shrink:0;padding:12px 16px 16px;border-top:1px solid var(--border);background:var(--bg)}
+.input-wrap{max-width:640px;margin:0 auto;background:var(--surface);border:1px solid var(--border2);border-radius:14px;display:flex;align-items:flex-end;padding:4px 4px 4px 14px;transition:border-color .2s}
+.input-wrap:focus-within{border-color:rgba(108,143,255,.5)}
+textarea{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:13px;line-height:1.5;resize:none;padding:8px 0;min-height:22px;max-height:100px}
+textarea::placeholder{color:var(--muted)}
+.send-btn{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin:3px;transition:transform .15s,opacity .15s}
+.send-btn:hover{transform:scale(1.05)}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.send-btn svg{width:15px;height:15px;fill:white}
+.input-hint{text-align:center;font-size:10px;color:var(--muted);margin-top:8px;font-family:var(--mono)}
+/* MODALES */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal-overlay.active{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:18px;padding:22px;width:100%;max-width:540px;max-height:80vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.modal-header h2{font-size:14px;font-weight:600}
+.modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1}
+.modal-msg{padding:10px 13px;border-radius:10px;margin-bottom:8px;font-size:12px;line-height:1.6}
+.modal-msg.user{background:#1e2a45;color:#d4deff;margin-left:20%}
+.modal-msg.assistant{background:var(--surface2);color:var(--text);margin-right:20%}
+.modal-msg-meta{font-size:10px;color:var(--muted);margin-bottom:4px;font-family:var(--mono)}
+/* PANEL NOTAS */
+.notas-panel{position:fixed;right:-380px;top:0;height:100vh;width:360px;background:var(--surface);border-left:1px solid var(--border2);z-index:200;display:flex;flex-direction:column;transition:right .3s ease;box-shadow:-8px 0 24px rgba(0,0,0,.4);overflow:hidden}
+.notas-panel.open{right:0}
+.notas-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.notas-header h3{font-size:14px;font-weight:600}
+.notas-toolbar{display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.notas-btn{padding:7px 14px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--muted);font-size:12px;cursor:pointer;transition:all .2s;font-family:var(--font);flex:1;text-align:center}
+.notas-btn:hover{border-color:var(--accent);color:var(--text)}
+.notas-editor{flex:1;width:100%;min-height:0;max-height:none!important;height:auto!important;background:var(--surface2);border:none;border-top:1px solid var(--border);outline:none;color:var(--text);font-family:var(--font);font-size:13px;line-height:1.7;resize:none;padding:16px;box-sizing:border-box}
+.notas-editor:focus{background:var(--surface2)}
+.notas-editor:focus{border-color:rgba(108,143,255,.4)}
+.notas-footer{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;margin-top:auto}
+.notas-footer-btn{flex:1;padding:10px;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;border:none}
+.notas-guardar{background:linear-gradient(135deg,var(--accent),var(--accent2));color:white;box-shadow:0 4px 12px rgba(108,143,255,.3)}
+.notas-limpiar{background:var(--surface2);border:1px solid var(--border2)!important;color:var(--muted)}
+/* TEMAS */
+.temas-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.tema-btn{height:48px;border-radius:10px;border:2px solid transparent;cursor:pointer;transition:all .2s}
+.tema-btn:hover{transform:scale(1.05)}
+.tema-btn.activo{border-color:white;box-shadow:0 0 0 2px var(--accent)}
+.color-picker-wrap{display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:10px}
+.color-picker-wrap label{font-size:13px;color:var(--text)}
+input[type=color]{width:48px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none}
+/* USER FOOTER */
+.user-footer{padding:10px 12px;border-top:1px solid var(--border);flex-shrink:0;position:relative}
+.user-footer-btn{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border-radius:10px;background:none;border:none;cursor:pointer;transition:all .2s;color:var(--text);font-family:var(--font)}
+.user-footer-btn:hover{background:var(--surface2)}
+.user-avatar{width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:white;flex-shrink:0}
+.user-info{flex:1;text-align:left;min-width:0}
+.user-name{font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-plan{font-size:10px;color:var(--muted);font-family:var(--mono)}
+.user-menu{position:absolute;bottom:64px;left:8px;right:8px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:6px;box-shadow:0 -8px 32px rgba(0,0,0,.4);display:none;z-index:50}
+.user-menu.open{display:block}
+.user-menu-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;border-radius:9px;background:none;border:none;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;transition:all .2s;text-align:left}
+.user-menu-item:hover{background:var(--surface2)}
+.user-menu-item.danger{color:var(--red)}
+.user-menu-item.danger:hover{background:rgba(248,113,113,.1)}
+.user-menu-sep{height:1px;background:var(--border);margin:4px 0}
+.sidebar.collapsed .user-footer{padding:8px 0;display:flex;justify-content:center}
+.sidebar.collapsed .user-info,.sidebar.collapsed .user-chevron{display:none}
+.sidebar.collapsed .user-footer-btn{justify-content:center;padding:8px}
+  </style>
+  <script src="{{ url_for('static', filename='js/tema.js') }}"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo"><div class="logo-icon">🧠</div>AdaptLearn</div>
+  <div class="header-right">
+    <span id="badgeTipo"></span>
+    <span id="badgePerfil"></span>
+    <button class="btn-header" onclick="toggleNotas()" id="btnNotas">📝 Notas</button>
+    <button class="btn-header" id="btnTema" onclick="togglePanelTema()" title="Personalizar tema">🎨 Tema</button>
+    <button class="btn-header" onclick="window.location.href='/dashboard'">📊 Dashboard</button>
+    <button class="btn-header btn-detener" id="btnDetener" onclick="detenerRespuesta()" style="display:none">⏹ Detener</button>
+    <button class="btn-header btn-new" onclick="nuevaConversacion()">+ Nueva</button>
+    <div class="status-pill"><div class="dot"></div>Motor IA activo</div>
+  </div>
+</div>
+
+<div class="main-layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <button class="toggle-sidebar" onclick="toggleSidebar()" id="btnToggleSidebar" title="Colapsar panel">◀</button>
+      <span>HISTORIAL</span>
+      <button class="sidebar-refresh" onclick="cargarSesiones()">↻ actualizar</button>
+    </div>
+    <div class="sidebar-list" id="sidebarList">
+      <div class="sidebar-empty">Tus conversaciones aparecerán aquí automáticamente.</div>
+    </div>
+    <div class="rendimiento-panel">
+      <div class="rend-title">📊 MI RENDIMIENTO</div>
+      <div class="rend-stats">
+        <div class="rend-stat"><div class="rend-num" id="totalSesiones">0</div><div class="rend-label">Sesiones</div></div>
+        <div class="rend-stat"><div class="rend-num" id="totalPlanes">0</div><div class="rend-label">Planes</div></div>
+      </div>
+      <div class="estilos-wrap">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:600">ESTILOS DE APRENDIZAJE</div>
+        <div class="estilo-row" id="row-VISUAL"><span class="estilo-icon">👁️</span><span class="estilo-name">Visual</span><div class="estilo-bar-wrap"><div class="estilo-bar-fill" id="bar-VISUAL" style="width:0%;background:var(--accent)"></div></div><span class="estilo-pct" id="pct-VISUAL">0%</span></div>
+        <div class="estilo-row" id="row-AUDITIVO"><span class="estilo-icon">👂</span><span class="estilo-name">Auditivo</span><div class="estilo-bar-wrap"><div class="estilo-bar-fill" id="bar-AUDITIVO" style="width:0%;background:var(--green)"></div></div><span class="estilo-pct" id="pct-AUDITIVO">0%</span></div>
+        <div class="estilo-row" id="row-LECTOR"><span class="estilo-icon">📖</span><span class="estilo-name">Lector</span><div class="estilo-bar-wrap"><div class="estilo-bar-fill" id="bar-LECTOR" style="width:0%;background:var(--yellow)"></div></div><span class="estilo-pct" id="pct-LECTOR">0%</span></div>
+        <div class="estilo-row" id="row-KINESTÉSICO"><span class="estilo-icon">✋</span><span class="estilo-name">Kinestésico</span><div class="estilo-bar-wrap"><div class="estilo-bar-fill" id="bar-KINESTÉSICO" style="width:0%;background:var(--red)"></div></div><span class="estilo-pct" id="pct-KINESTÉSICO">0%</span></div>
+      </div>
+    </div>
+
+    <!-- USER FOOTER -->
+    <div class="user-footer" id="userFooter">
+      <div class="user-menu" id="userMenu">
+        <button class="user-menu-item" onclick="window.location.href='/dashboard'">
+          📊 <span>Dashboard</span>
+        </button>
+        <button class="user-menu-item" onclick="togglePanelTema();cerrarUserMenu()">
+          🎨 <span>Personalizar tema</span>
+        </button>
+        <div class="user-menu-sep"></div>
+        <button class="user-menu-item" onclick="nuevaConversacion();cerrarUserMenu()">
+          ✦ <span>Nueva conversación</span>
+        </button>
+        <div class="user-menu-sep"></div>
+        <button class="user-menu-item danger" onclick="window.location.href='/'">
+          ⏻ <span>Cerrar sesión</span>
+        </button>
+      </div>
+      <button class="user-footer-btn" onclick="toggleUserMenu()" id="userFooterBtn">
+        <div class="user-avatar" id="sidebarAvatar">S</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarNombre">Cargando...</div>
+          <div class="user-plan">AdaptLearn</div>
+        </div>
+        <span class="user-chevron" style="color:var(--muted);font-size:12px">⋯</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- CHAT PRINCIPAL -->
+  <div class="chat-column">
+    <div class="chat-area" id="chatArea">
+      <div class="messages-wrap" id="messages">
+        <div class="welcome" id="welcome">
+          <div class="welcome-icon">✦</div>
+          <h1>¡Bienvenido a AdaptLearn!</h1>
+          <p>¿Qué quieres aprender hoy? Cuéntame el tema y crearé un plan con ejercicios prácticos por niveles.</p>
+          <div class="suggestion-grid">
+            <button class="suggestion" onclick="useSuggestion(this)"><span>🐍</span>Quiero aprender Python desde cero</button>
+            <button class="suggestion" onclick="useSuggestion(this)"><span>📐</span>Necesito entender Álgebra Lineal fácil</button>
+            <button class="suggestion" onclick="useSuggestion(this)"><span>⚕️</span>Quiero aprender Medicina de forma divertida</button>
+            <button class="suggestion" onclick="useSuggestion(this)"><span>🔬</span>Me cuesta mucho la Química, ayúdame</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="input-area">
+      <div class="input-wrap">
+        <textarea id="userInput" placeholder="Escribe aquí lo que quieres aprender..." rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+      <p class="input-hint">AdaptLearn · Respuestas por partes · Ejercicios con niveles progresivos</p>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL NOTAS -->
+<div class="notas-panel" id="notasPanel">
+  <div class="notas-header">
+    <h3>📝 Notas rápidas</h3>
+    <button onclick="toggleNotas()" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1">×</button>
+  </div>
+  <div class="notas-toolbar">
+    <button class="notas-btn" onclick="copiarDelChat()" title="Copiar último mensaje de la IA">📋 Copiar del chat</button>
+    <button class="notas-btn" onclick="limpiarNotas()" title="Limpiar notas">🗑 Limpiar</button>
+  </div>
+  <textarea class="notas-editor" id="notasEditor"
+      placeholder="Escribe tus notas aquí...&#10;&#10;Puedes copiar fragmentos del chat y guardarlos.&#10;Se guarda automáticamente."></textarea>
+  <div class="notas-footer">
+    <button class="notas-footer-btn notas-guardar" onclick="guardarYExportar()">💾 Guardar</button>
+  </div>
+</div>
+
+<!-- Modal exportar notas -->
+<div class="modal-overlay" id="modalExportar" onclick="cerrarModalExportar()">
+  <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2>💾 Guardar notas</h2>
+      <button class="modal-close" onclick="cerrarModalExportar()">×</button>
+    </div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px">¿Cómo quieres exportar tus notas?</p>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="exportarTxt()" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;transition:all .2s;text-align:left">
+        <span style="font-size:22px">📄</span>
+        <div><strong>Texto (.txt)</strong><br><span style="font-size:11px;color:var(--muted)">Archivo de texto simple</span></div>
+      </button>
+      <button onclick="exportarPdf()" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;transition:all .2s;text-align:left">
+        <span style="font-size:22px">📕</span>
+        <div><strong>PDF (.pdf)</strong><br><span style="font-size:11px;color:var(--muted)">Listo para imprimir o compartir</span></div>
+      </button>
+      <button onclick="exportarWord()" style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer;transition:all .2s;text-align:left">
+        <span style="font-size:22px">📘</span>
+        <div><strong>Word (.docx)</strong><br><span style="font-size:11px;color:var(--muted)">Editable en Microsoft Word</span></div>
+      </button>
+    </div>
+    <div style="margin-top:14px;display:flex;justify-content:flex-end">
+      <button onclick="cerrarModalExportar()" style="padding:8px 20px;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;color:var(--muted);font-family:var(--font);font-size:13px;cursor:pointer">Solo guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL VER SESIÓN -->
+<div class="modal-overlay" id="modalSesion" onclick="cerrarModalSiFuera(event)">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <h2 id="modalTitulo">💬 Conversación</h2>
+      <button class="modal-close" onclick="cerrarModal()">×</button>
+    </div>
+    <div id="modalMensajes">Cargando...</div>
+    <div style="margin-top:16px;display:flex;gap:8px">
+      <button onclick="reanudarSesion()" style="flex:1;padding:10px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">▶ Reanudar esta conversación</button>
+      <button onclick="cerrarModal()" style="padding:10px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;color:var(--muted);font-family:var(--font);font-size:13px;cursor:pointer">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ELIMINAR -->
+<div class="modal-overlay" id="modalEliminar" onclick="cancelarEliminar()">
+  <div class="modal" style="max-width:380px" onclick="event.stopPropagation()">
+    <div style="text-align:center;padding:10px 0">
+      <div style="font-size:40px;margin-bottom:14px">🗑️</div>
+      <h2 style="font-size:16px;font-weight:600;margin-bottom:10px">Eliminar chat</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.6">¿Estás seguro de que quieres eliminar este chat?<br>Esta acción no se puede deshacer.</p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="cancelarEliminar()" style="padding:10px 24px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer">Cancelar</button>
+        <button onclick="confirmarEliminar()" style="padding:10px 24px;border-radius:10px;background:var(--red);border:none;color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL TEMA FLOTANTE -->
+<div id="panelTema" onclick="event.stopPropagation()" style="display:none;position:fixed;top:70px;right:20px;z-index:300;background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:18px;width:260px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <span style="font-size:13px;font-weight:600">Personalizar tema</span>
+    <button onclick="togglePanelTema()" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1">×</button>
+  </div>
+
+  <!-- Modo claro/oscuro -->
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:.5px">MODO</div>
+    <div style="display:flex;background:var(--surface2);border-radius:10px;padding:4px;gap:4px">
+      <button id="btnModoOscuro" onclick="aplicarModo('oscuro')" style="flex:1;padding:7px;border-radius:7px;border:none;background:var(--accent);color:white;font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer">🌙 Oscuro</button>
+      <button id="btnModoClaro" onclick="aplicarModo('claro')" style="flex:1;padding:7px;border-radius:7px;border:none;background:transparent;color:var(--muted);font-family:var(--font);font-size:12px;font-weight:500;cursor:pointer">☀️ Claro</button>
+    </div>
+  </div>
+
+  <!-- Color de acento -->
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:.5px">COLOR DE ACENTO</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px">
+      <button onclick="aplicarTema('#6c8fff','#a78bfa')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#6c8fff,#a78bfa);border:2px solid white;cursor:pointer" title="Morado"></button>
+      <button onclick="aplicarTema('#4ade80','#22c55e')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4ade80,#22c55e);border:2px solid transparent;cursor:pointer" title="Verde"></button>
+      <button onclick="aplicarTema('#38bdf8','#0ea5e9')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#0ea5e9);border:2px solid transparent;cursor:pointer" title="Azul"></button>
+      <button onclick="aplicarTema('#fb923c','#f97316')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#fb923c,#f97316);border:2px solid transparent;cursor:pointer" title="Naranja"></button>
+      <button onclick="aplicarTema('#f472b6','#ec4899')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f472b6,#ec4899);border:2px solid transparent;cursor:pointer" title="Rosa"></button>
+      <button onclick="aplicarTema('#f87171','#ef4444')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f87171,#ef4444);border:2px solid transparent;cursor:pointer" title="Rojo"></button>
+      <button onclick="aplicarTema('#fbbf24','#f59e0b')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#fbbf24,#f59e0b);border:2px solid transparent;cursor:pointer" title="Amarillo"></button>
+      <button onclick="aplicarTema('#a3e635','#84cc16')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#a3e635,#84cc16);border:2px solid transparent;cursor:pointer" title="Lima"></button>
+      <button onclick="aplicarTema('#a78bfa','#7c3aed')" style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:2px solid transparent;cursor:pointer" title="Violeta"></button>
+      <label style="width:36px;height:36px;border-radius:50%;background:conic-gradient(red,yellow,green,blue,red);border:2px solid transparent;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative" title="Color libre">
+        <input type="color" id="colorPicker" value="#6c8fff" oninput="aplicarColorPersonalizado(this.value)" style="opacity:0;width:36px;height:36px;cursor:pointer;position:absolute;top:0;left:0">
+      </label>
+    </div>
+  </div>
+
+  <div style="font-size:10px;color:var(--muted);text-align:center;font-family:var(--mono)">Se guarda automáticamente</div>
+</div>
+
+<script>
+// ── ESTADO GLOBAL ──────────────────────────────────
+var conversationHistory  = [];
+var isLoading            = false;
+var sesionId             = generarId();
+var estilosSesion        = {VISUAL:0,AUDITIVO:0,LECTOR:0,'KINESTÉSICO':0};
+var estiloActual         = null;
+var materiaActual        = '';
+var ejercicioActual      = null;
+var sesionActualData     = null;
+var controladorAbort     = null;
+var nivelActual          = 1;
+var ejerciciosEnNivel    = 0;
+var totalEjerciciosNivel = 5;
+var pistaActual          = 0;
+var pistasDisponibles    = [];
+var NIVELES = ['principiante','básico','intermedio','avanzado','experto'];
+
+// ── UTILIDADES ─────────────────────────────────────
+function generarId(){return 'ses_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function useSuggestion(btn){document.getElementById('userInput').value=btn.innerText.replace(/^[^\w]+/,'').trim();sendMessage();}
+function scrollToBottom(){document.getElementById('chatArea').scrollTop=document.getElementById('chatArea').scrollHeight;}
+
+// ── NUEVA CONVERSACIÓN ─────────────────────────────
+function nuevaConversacion(){
+  sesionId=generarId();conversationHistory=[];
+  estilosSesion={VISUAL:0,AUDITIVO:0,LECTOR:0,'KINESTÉSICO':0};
+  estiloActual=null;materiaActual='';ejercicioActual=null;
+  nivelActual=1;ejerciciosEnNivel=0;pistaActual=0;pistasDisponibles=[];
+  document.getElementById('badgePerfil').style.display='none';
+  document.getElementById('badgeTipo').style.display='none';
+  document.getElementById('messages').innerHTML=`
+    <div class="welcome" id="welcome">
+      <div class="welcome-icon">✦</div>
+      <h1>¡Bienvenido a AdaptLearn!</h1>
+      <p>¿Qué quieres aprender hoy? Cuéntame el tema y crearé un plan con ejercicios por niveles.</p>
+      <div class="suggestion-grid">
+        <button class="suggestion" onclick="useSuggestion(this)"><span>🐍</span>Quiero aprender Python desde cero</button>
+        <button class="suggestion" onclick="useSuggestion(this)"><span>📐</span>Necesito entender Álgebra Lineal fácil</button>
+        <button class="suggestion" onclick="useSuggestion(this)"><span>⚕️</span>Quiero aprender Medicina de forma divertida</button>
+        <button class="suggestion" onclick="useSuggestion(this)"><span>🔬</span>Me cuesta mucho la Química, ayúdame</button>
+      </div>
+    </div>`;
+}
+
+// ── BADGES ─────────────────────────────────────────
+function actualizarBadge(estilo){
+  var iconos={VISUAL:'👁️',AUDITIVO:'👂',LECTOR:'📖','KINESTÉSICO':'✋'};
+  var colores={VISUAL:'rgba(108,143,255,.15)',AUDITIVO:'rgba(74,222,128,.15)',LECTOR:'rgba(251,191,36,.15)','KINESTÉSICO':'rgba(248,113,113,.15)'};
+  var textos={VISUAL:'#6c8fff',AUDITIVO:'#4ade80',LECTOR:'#fbbf24','KINESTÉSICO':'#f87171'};
+  var badge=document.getElementById('badgePerfil');
+  badge.textContent=(iconos[estilo]||'🧠')+' '+estilo;
+  badge.style.background=colores[estilo]||'rgba(167,139,250,.15)';
+  badge.style.color=textos[estilo]||'#a78bfa';
+  badge.style.borderColor=textos[estilo]||'#a78bfa';
+  badge.style.display='inline-block';
+}
+
+// ── PARSEO ─────────────────────────────────────────
+function extraerTipo(texto){
+  var m=texto.match(/\[TIPO:\s*(CODIGO|MATEMATICA|CIENCIA|HUMANIDADES|IDIOMA|GENERAL)\]/i);
+  if(m){
+    var iconos={CODIGO:'💻',MATEMATICA:'📐',CIENCIA:'🔬',HUMANIDADES:'📜',IDIOMA:'🌐',GENERAL:'📚'};
+    var badge=document.getElementById('badgeTipo');
+    badge.textContent=(iconos[m[1].toUpperCase()]||'📚')+' '+m[1].toUpperCase();
+    badge.style.display='inline-block';
+    return texto.replace(/\[TIPO:[^\]]+\]\s*/i,'');
+  }
+  return texto;
+}
+function extraerPerfil(texto){
+  var m=texto.match(/\[PERFIL:\s*(VISUAL|AUDITIVO|LECTOR|KINESTÉSICO)\]/i);
+  if(m){var p=m[1].toUpperCase();estiloActual=p;actualizarBadge(p);return{texto:texto.replace(/\[PERFIL:[^\]]+\]\s*/i,''),estilo:p};}
+  return{texto:texto,estilo:null};
+}
+function formatearCodigo(texto){
+  return texto.replace(/```(\w*)?\n?([\s\S]*?)```/g,function(m,lang,code){
+    var l=(lang||'codigo').toUpperCase();
+    var c=code.replace(/</g,'&lt;').replace(/>/g,'&gt;').trim();
+    return '<div class="code-lang">'+l+'</div><div class="code-block">'+c+'</div>';
+  });
+}
+function formatearTexto(texto){
+  return texto
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/`(.+?)`/g,'<code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-family:var(--mono);font-size:12px">$1</code>');
+}
+function extraerFuentes(texto){
+  if(!texto.includes('[FUENTES_INICIO]'))return{texto:texto,fuentes:[]};
+  var p=texto.split('[FUENTES_INICIO]');
+  var bloque=p[1]?p[1].split('[FUENTES_FIN]')[0].trim():'';
+  var despues=p[1]&&p[1].includes('[FUENTES_FIN]')?p[1].split('[FUENTES_FIN]')[1]||'':'';
+  var fuentes=bloque.split('\n').filter(function(l){return l.trim().startsWith('-');}).map(function(l){
+    var s=l.replace(/^-\s*/,'').split('|');
+    return{titulo:(s[0]||'').trim(),autores:(s[1]||'').trim(),link:(s[2]||'').trim()};
+  });
+  return{texto:p[0]+(despues||''),fuentes:fuentes};
+}
+
+// ── RENDER ─────────────────────────────────────────
+function renderPlan(raw){
+  var lines=raw.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+  var materia='',interes='',estilo='',weeks=[],cur=null;
+  lines.forEach(function(line){
+    if(line.startsWith('MATERIA:')){materia=line.replace('MATERIA:','').trim();materiaActual=materia;}
+    else if(line.startsWith('INTERES:'))interes=line.replace('INTERES:','').trim();
+    else if(line.startsWith('ESTILO:'))estilo=line.replace('ESTILO:','').trim();
+    else if(line.match(/^SEMANA \d+:/)){if(cur)weeks.push(cur);cur={title:line.replace(/^SEMANA \d+:\s*/,''),items:[]};}
+    else if(line.startsWith('-')&&cur)cur.items.push(line.replace(/^-\s*/,''));
+  });
+  if(cur)weeks.push(cur);
+  var iconos={VISUAL:'👁️',AUDITIVO:'👂',LECTOR:'📖',KINESTÉSICO:'✋'};
+  var html='<div class="plan-card"><h3>📚 Plan · '+materia+'</h3><div style="font-size:11px;color:var(--muted);margin-bottom:12px">Interés: <strong style="color:var(--accent2)">'+interes+'</strong> · Estilo: <strong style="color:var(--green)">'+(iconos[estilo?.toUpperCase()]||'🧠')+' '+estilo+'</strong></div>';
+  weeks.forEach(function(w,i){
+    html+='<div class="plan-week"><div class="plan-week-title">Semana '+(i+1)+' — '+w.title+'</div>';
+    w.items.forEach(function(item){html+='<div class="plan-item">'+item+'</div>';});
+    html+='</div>';
+  });
+  html+='<div class="plan-guardado" id="estadoGuardado">⏳ Guardando...</div></div>';
+  return html;
+}
+function renderFuentes(fuentes){
+  if(!fuentes.length)return'';
+  var html='<div class="fuentes-card"><h4>📖 Fuentes académicas verificadas</h4>';
+  fuentes.forEach(function(f){html+='<div class="fuente-item"><a href="'+f.link+'" target="_blank">'+(f.titulo||'Ver fuente')+'</a><span class="fuente-src">'+(f.autores||'Académico')+'</span></div>';});
+  return html+'</div>';
+}
+
+// ── MENSAJES POR PARTES ────────────────────────────
+function mostrarMensajePorPartes(partes,fuentes,wrap){
+  var contenedor=document.createElement('div');contenedor.className='msg ai';
+  var avatar=document.createElement('div');avatar.className='msg-avatar';avatar.textContent='✦';
+  var content=document.createElement('div');content.className='msg-content';
+  contenedor.appendChild(avatar);contenedor.appendChild(content);
+  wrap.appendChild(contenedor);scrollToBottom();
+  var delay=0;
+  partes.forEach(function(parte,i){
+    setTimeout(function(){
+      var t1=extraerTipo(parte);
+      var r=extraerPerfil(t1);var parteTexto=r.texto;var estilo=r.estilo;
+      if(estilo){
+        var iconos={VISUAL:'👁️',AUDITIVO:'👂',LECTOR:'📖','KINESTÉSICO':'✋'};
+        var cc={VISUAL:'chip-visual',AUDITIVO:'chip-auditivo',LECTOR:'chip-lector','KINESTÉSICO':'chip-kinestesico'};
+        var chip=document.createElement('div');
+        chip.className='estilo-chip '+(cc[estilo]||'chip-visual')+' parte-msg';
+        chip.textContent=(iconos[estilo]||'')+' '+estilo+' detectado';
+        content.appendChild(chip);
+      }
+      if(parteTexto.includes('[PLAN_INICIO]')){
+        var planRaw=parteTexto.split('[PLAN_INICIO]')[1].split('[PLAN_FIN]')[0].trim();
+        var before=parteTexto.split('[PLAN_INICIO]')[0].trim();
+        var after=(parteTexto.split('[PLAN_FIN]')[1]||'').trim();
+        if(before){var b=document.createElement('div');b.className='bubble parte-msg';b.innerHTML=formatearCodigo(formatearTexto(before));content.appendChild(b);}
+        var planEl=document.createElement('div');planEl.className='parte-msg';planEl.innerHTML=renderPlan(planRaw);content.appendChild(planEl);
+        if(after){var a=document.createElement('div');a.className='bubble parte-msg';a.style.marginTop='8px';a.innerHTML=formatearCodigo(formatearTexto(after));content.appendChild(a);}
+      }else{
+        var bubble=document.createElement('div');bubble.className='bubble parte-msg';
+        bubble.innerHTML=formatearCodigo(formatearTexto(parteTexto));
+        content.appendChild(bubble);
+      }
+      scrollToBottom();
+    },delay);
+    delay+=600+Math.min((partes[i]||'').length*2,1200);
+  });
+  setTimeout(function(){
+    if(fuentes&&fuentes.length){var fEl=document.createElement('div');fEl.innerHTML=renderFuentes(fuentes);content.appendChild(fEl);}
+    var btnEl=document.createElement('div');
+    btnEl.innerHTML='<button class="btn-practicar" onclick="abrirPractica()">📝 Practicar ahora — Nivel '+nivelActual+'</button>';
+    content.appendChild(btnEl);scrollToBottom();
+  },delay+300);
+}
+function addMessageSimple(role,text){
+  var welcome=document.getElementById('welcome');if(welcome)welcome.remove();
+  var wrap=document.getElementById('messages');
+  var div=document.createElement('div');div.className='msg '+role;
+  var avatar=role==='user'?'👤':'✦';
+  div.innerHTML='<div class="msg-avatar">'+avatar+'</div><div class="msg-content"><div class="bubble">'+formatearCodigo(formatearTexto(text))+'</div></div>';
+  wrap.appendChild(div);scrollToBottom();
+}
+
+// ── PRÁCTICA CON NIVELES ───────────────────────────
+async function abrirPractica(){
+  var wrap=document.getElementById('messages');
+  var prev=document.getElementById('panelPractica');if(prev)prev.remove();
+  var panel=document.createElement('div');panel.id='panelPractica';panel.className='practica-panel';
+  panel.innerHTML='<div class="practica-header"><h3>📝 Generando ejercicio nivel '+nivelActual+'...</h3></div><div style="color:var(--muted);font-size:12px;text-align:center;padding:20px"><div class="typing" style="justify-content:center"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+  wrap.appendChild(panel);scrollToBottom();
+  await cargarNuevoEjercicio(panel,false);
+}
+async function cargarNuevoEjercicio(panel,mismoPanel){
+  if(!panel){panel=document.getElementById('panelPractica');if(!panel)return;}
+  pistaActual=0;pistasDisponibles=[];
+  panel.innerHTML='<div class="practica-header"><h3>📝 Generando ejercicio...</h3></div><div style="color:var(--muted);font-size:12px;text-align:center;padding:20px"><div class="typing" style="justify-content:center"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>';
+  try{
+    var contexto=conversationHistory.slice(-4).map(function(m){return m.content;}).join(' ').substring(0,300);
+    var res=await fetch('/generar_ejercicio',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({materia:materiaActual||'programacion',estilo:estiloActual||'GENERAL',nivel:nivelActual,contexto:contexto})});
+    ejercicioActual=await res.json();
+    if(ejercicioActual.error)throw new Error(ejercicioActual.error);
+    pistasDisponibles=generarPistas(ejercicioActual);
+    renderEjercicio(panel);scrollToBottom();
+  }catch(e){
+    panel.innerHTML='<p style="color:var(--red);font-size:13px;padding:10px">❌ No se pudo generar el ejercicio. <button onclick="cargarNuevoEjercicio(null,false)" style="color:var(--accent);background:none;border:none;cursor:pointer;font-family:var(--font)">Intentar de nuevo</button></p>';
+  }
+}
+function generarPistas(ej){
+  var p=[];
+  if(ej.pista)p.push({texto:'💡 '+ej.pista});
+  if(ej.pistas_extra&&Array.isArray(ej.pistas_extra)){
+    ej.pistas_extra.forEach(function(px,i){p.push({texto:'📌 Paso '+(i+1)+': '+px});});
+  }else if(ej.explicacion){
+    ej.explicacion.split('.').filter(function(s){return s.trim().length>10;}).slice(0,3).forEach(function(s,i){
+      p.push({texto:'📌 Paso '+(i+1)+': '+s.trim()+'.'});
+    });
+  }
+  if(ej.respuesta_correcta)p.push({texto:'✅ La respuesta es: <strong>'+ej.respuesta_correcta+'</strong>'});
+  return p;
+}
+function renderEjercicio(panel){
+  var esCodigo=ejercicioActual.tipo==='codigo';
+  var nivel=NIVELES[Math.min(nivelActual-1,NIVELES.length-1)];
+  var progreso=(ejerciciosEnNivel/totalEjerciciosNivel)*100;
+  var inputHtml=esCodigo
+    ?'<div class="editor-wrap"><div class="editor-header"><span class="editor-lang">'+(ejercicioActual.lenguaje||'codigo').toUpperCase()+'</span></div><textarea class="editor-textarea" id="respuestaUsuario" placeholder="Escribe tu código aquí..."></textarea></div>'
+    :'<textarea class="practica-input" id="respuestaUsuario" placeholder="Escribe tu respuesta aquí..."></textarea>';
+  panel.innerHTML=
+    '<div class="practica-header"><h3>📝 Ejercicio <span style="color:var(--muted);font-size:11px;font-weight:400">· '+materiaActual+'</span></h3></div>'
+    +'<div class="nivel-wrap"><span class="nivel-label">NIVEL</span>'
+    +'<div class="nivel-progreso-wrap"><div class="nivel-progreso-fill" style="width:'+progreso+'%"></div></div>'
+    +'<span class="nivel-num">'+nivelActual+'</span>'
+    +'<span class="ejercicios-contador">'+ejerciciosEnNivel+'/'+totalEjerciciosNivel+'</span>'
+    +'<span style="font-size:10px;color:var(--muted);margin-left:4px;font-family:var(--mono)">'+nivel.toUpperCase()+'</span></div>'
+    +'<div class="practica-titulo">'+ejercicioActual.titulo+'</div>'
+    +'<div class="practica-instruccion">'+ejercicioActual.instruccion+'</div>'
+    +inputHtml
+    +'<div class="pistas-container" id="pistasContainer"></div>'
+    +'<div class="practica-btns">'
+    +(esCodigo?'<button class="btn-ejecutar" onclick="ejecutarCodigo()">▶ Ejecutar</button>':'')
+    +'<button class="btn-ejecutar" onclick="evaluarRespuesta()">✓ Verificar</button>'
+    +'<button class="btn-pista" id="btnPista" onclick="mostrarSiguientePista()">💡 Pista ('+pistasDisponibles.length+' disponibles)</button>'
+    +'<button class="btn-nuevo-ej" onclick="cargarNuevoEjercicio(null,true)">↻ Nuevo ejercicio</button>'
+    +'</div><div id="outputEjercicio"></div>';
+}
+function mostrarSiguientePista(){
+  if(pistaActual>=pistasDisponibles.length){
+    var c=document.getElementById('pistasContainer');
+    var d=document.createElement('div');d.className='pista-solucion';
+    d.innerHTML='<strong>✅ Solución completa:</strong><br>'+(ejercicioActual.explicacion||'Respuesta: '+ejercicioActual.respuesta_correcta);
+    c.appendChild(d);scrollToBottom();return;
+  }
+  var pista=pistasDisponibles[pistaActual];
+  var c=document.getElementById('pistasContainer');
+  var esUltima=pistaActual===pistasDisponibles.length-1;
+  var d=document.createElement('div');d.className=esUltima?'pista-solucion':'pista-item';
+  d.innerHTML=(esUltima?'<strong>Solución:</strong><br>':'<strong>Pista '+(pistaActual+1)+':</strong> ')+pista.texto;
+  c.appendChild(d);pistaActual++;
+  var btn=document.getElementById('btnPista');
+  if(btn){var rest=pistasDisponibles.length-pistaActual;btn.textContent=rest>0?'💡 Siguiente pista ('+rest+' más)':'💡 Ver solución completa';}
+  scrollToBottom();
+}
+async function ejecutarCodigo(){
+  if(!ejercicioActual)return;
+  var codigo=document.getElementById('respuestaUsuario').value;
+  var output=document.getElementById('outputEjercicio');
+  output.innerHTML='<div class="output-wrap"><div class="output-header">Ejecutando...</div><div class="output-content" style="color:var(--muted)">⏳ Procesando...</div></div>';
+  try{
+    var res=await fetch('/ejecutar_codigo',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({codigo:codigo,lenguaje:ejercicioActual.lenguaje||'python'})});
+    var data=await res.json();
+    output.innerHTML='<div class="output-wrap"><div class="output-header">Output — '+(ejercicioActual.lenguaje||'codigo').toUpperCase()+'</div>'
+      +'<div class="output-content '+(data.exitoso?'output-ok':'output-error')+'">'+(data.error||data.output||'Sin output')+'</div></div>'
+      +'<div style="font-size:11px;color:var(--muted);margin-top:8px">'+(data.explicacion||'')+'</div>';
+  }catch(e){output.innerHTML='<p style="color:var(--red);font-size:12px;margin-top:8px">❌ Error al ejecutar</p>';}
+}
+async function evaluarRespuesta(){
+  if(!ejercicioActual)return;
+  var respuesta=document.getElementById('respuestaUsuario').value.trim();
+  if(!respuesta)return;
+  var output=document.getElementById('outputEjercicio');
+  output.innerHTML='<div style="color:var(--muted);font-size:12px;padding:10px 0">⏳ Evaluando...</div>';
+  try{
+    var res=await fetch('/evaluar_respuesta',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ejercicio:ejercicioActual.instruccion,respuesta_usuario:respuesta,tipo:ejercicioActual.tipo,materia:materiaActual})});
+    var data=await res.json();
+    var puntaje=data.puntaje||0;var aprobado=puntaje>=80;
+    output.innerHTML=
+      '<div class="eval-result '+(aprobado?'eval-ok':'eval-error')+'">'
+      +'<div class="eval-score '+(puntaje>=70?'ok':'bad')+'">'+(aprobado?'✅':'❌')+' '+puntaje+'%</div>'
+      +'<strong style="display:block;margin-bottom:8px">'+(data.mensaje||'')+'</strong>'
+      +(data.errores?'<div style="color:var(--red);font-size:12px;margin-bottom:8px">'+data.errores+'</div>':'')
+      +'<div style="background:var(--surface2);border-radius:8px;padding:10px;margin-top:8px;font-size:12px"><strong style="color:var(--accent2)">✨ Solución:</strong><br>'+(data.correccion||'')+'</div>'
+      +'<div style="margin-top:10px;font-size:12px;color:var(--muted)">👉 '+(data.siguiente_paso||'')+'</div>'
+      +'<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'
+      +'<button onclick="siguienteEjercicio()" style="padding:10px 20px;background:linear-gradient(135deg,'+(aprobado?'var(--green),#22c55e':'var(--accent),var(--accent2)')+');border:none;border-radius:9px;color:'+(aprobado?'#0a1a0a':'white')+';font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer">'+(aprobado?'➡️ Siguiente ejercicio (Nivel '+nivelActual+')':'🔄 Intentar de nuevo')+'</button>'
+      +(aprobado?'':'<button onclick="cargarNuevoEjercicio(null,true)" style="padding:10px 16px;background:var(--surface2);border:1px solid var(--border2);border-radius:9px;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer">Cambiar ejercicio</button>')
+      +'</div></div>';
+    if(aprobado){
+      ejerciciosEnNivel++;
+      if(ejerciciosEnNivel>=totalEjerciciosNivel){
+        nivelActual++;ejerciciosEnNivel=0;
+        var btnSig=output.querySelector('button');
+        if(btnSig)btnSig.textContent='🎉 ¡Nivel '+nivelActual+'! Siguiente ejercicio';
+      }else{
+        var fill=document.querySelector('.nivel-progreso-fill');if(fill)fill.style.width=((ejerciciosEnNivel/totalEjerciciosNivel)*100)+'%';
+        var cnt=document.querySelector('.ejercicios-contador');if(cnt)cnt.textContent=ejerciciosEnNivel+'/'+totalEjerciciosNivel;
+      }
+    }
+  }catch(e){output.innerHTML='<p style="color:var(--red);font-size:12px;margin-top:8px">❌ Error al evaluar</p>';}
+}
+function siguienteEjercicio(){
+  if(ejerciciosEnNivel===0&&nivelActual>1){
+    var panel=document.getElementById('panelPractica');
+    if(panel){var banner=document.createElement('div');banner.className='nivel-up-banner';banner.innerHTML='<h3>🎉 ¡Subiste al Nivel '+nivelActual+'!</h3><p>Los ejercicios ahora son '+NIVELES[Math.min(nivelActual-1,NIVELES.length-1)].toUpperCase()+'.</p>';panel.insertBefore(banner,panel.firstChild);}
+  }
+  cargarNuevoEjercicio(null,true);
+}
+
+// ── DETENER RESPUESTA ──────────────────────────────
+function detenerRespuesta(){
+  if(controladorAbort){controladorAbort.abort();controladorAbort=null;}
+  removeTyping();isLoading=false;
+  document.getElementById('sendBtn').disabled=false;
+  document.getElementById('btnDetener').style.display='none';
+  addMessageSimple('ai','⏹ Respuesta detenida.');
+}
+
+// ── SEND MESSAGE ───────────────────────────────────
+function showTyping(){
+  var welcome=document.getElementById('welcome');if(welcome)welcome.remove();
+  var wrap=document.getElementById('messages');
+  var div=document.createElement('div');div.className='msg ai';div.id='typing-indicator';
+  div.innerHTML='<div class="msg-avatar">✦</div><div class="msg-content"><div class="bubble"><div class="typing"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div></div>';
+  wrap.appendChild(div);scrollToBottom();
+}
+function removeTyping(){var t=document.getElementById('typing-indicator');if(t)t.remove();}
+
+async function sendMessage(){
+  if(isLoading)return;
+  var input=document.getElementById('userInput');
+  var text=input.value.trim();if(!text)return;
+  input.value='';input.style.height='auto';
+  document.getElementById('sendBtn').disabled=true;
+  document.getElementById('btnDetener').style.display='inline-block';
+  isLoading=true;controladorAbort=new AbortController();
+  var welcome=document.getElementById('welcome');if(welcome)welcome.remove();
+  addMessageSimple('user',text);
+  conversationHistory.push({role:'user',content:text});
+  showTyping();
+  try{
+    var res=await fetch('/chat_ia',{method:'POST',headers:{'Content-Type':'application/json'},
+      signal:controladorAbort.signal,
+      body:JSON.stringify({mensajes:conversationHistory,sesion_id:sesionId,estilos_sesion:estilosSesion})});
+    var data=await res.json();
+    removeTyping();
+    if(data.respuesta){
+      if(data.sesion_id)sesionId=data.sesion_id;
+      if(data.estilos_sesion)estilosSesion=data.estilos_sesion;
+      if(data.estilo_actual)estiloActual=data.estilo_actual;
+      if(data.materia)materiaActual=data.materia;
+      conversationHistory.push({role:'assistant',content:data.respuesta});
+      var fuentes=[];
+      if(data.respuesta.includes('[FUENTES_INICIO]')){fuentes=extraerFuentes(data.respuesta).fuentes;}
+      var partes=data.partes&&data.partes.length>1?data.partes:[data.respuesta];
+      mostrarMensajePorPartes(partes,fuentes,document.getElementById('messages'));
+      setTimeout(function(){cargarSesiones();cargarRendimiento();},2000);
+      var estadoEl=document.getElementById('estadoGuardado');
+      if(estadoEl)estadoEl.textContent='✓ Guardado automáticamente';
+    }else{addMessageSimple('ai','❌ Error: '+(data.error||'Intenta de nuevo'));}
+  }catch(err){
+    removeTyping();
+    if(err.name!=='AbortError')addMessageSimple('ai','❌ No se pudo conectar.');
+  }
+  isLoading=false;
+  document.getElementById('sendBtn').disabled=false;
+  document.getElementById('btnDetener').style.display='none';
+  controladorAbort=null;
+  input.focus();
+}
+
+// ── HISTORIAL Y REANUDAR ───────────────────────────
+async function verSesion(sid,titulo){
+  sesionActualData=null;
+  document.getElementById('modalTitulo').textContent='💬 '+titulo;
+  document.getElementById('modalSesion').classList.add('active');
+  document.getElementById('modalMensajes').innerHTML='<p style="color:var(--muted);font-size:12px;text-align:center;padding:20px">Cargando...</p>';
+  try{
+    var res=await fetch('/sesion/'+sid);
+    var msgs=await res.json();
+    if(!msgs.length){document.getElementById('modalMensajes').innerHTML='<p style="color:var(--muted);padding:10px;font-size:12px">Sin mensajes.</p>';return;}
+    document.getElementById('modalMensajes').innerHTML=msgs.map(function(m){
+      var hora=new Date(m.fecha).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit'});
+      var label=m.rol==='user'?'👤 Tú':'🧠 AdaptLearn';
+      var prev=m.mensaje.length>250?m.mensaje.substring(0,250)+'...':m.mensaje;
+      prev=prev.replace(/\[TIPO:[^\]]+\]/g,'').replace(/\[PERFIL:[^\]]+\]/g,'').replace(/---PARTE---/g,'').trim();
+      return'<div class="modal-msg '+m.rol+'"><div class="modal-msg-meta">'+label+' · '+hora+'</div>'+prev+'</div>';
+    }).join('');
+    sesionActualData={sid:sid,titulo:titulo,msgs:msgs};
+  }catch(e){document.getElementById('modalMensajes').innerHTML='<p style="color:var(--muted)">Error.</p>';}
+}
+function reanudarSesion(){
+  if(!sesionActualData)return;
+  cerrarModal();
+  var wrap=document.getElementById('messages');wrap.innerHTML='';
+  conversationHistory=[];sesionId=sesionActualData.sid;
+  sesionActualData.msgs.forEach(function(m){
+    conversationHistory.push({role:m.rol==='assistant'?'assistant':'user',content:m.mensaje});
+    if(m.rol==='user'){addMessageSimple('user',m.mensaje);}
+    else{
+      var tl=m.mensaje.replace(/\[TIPO:[^\]]+\]\s*/g,'').replace(/\[PERFIL:[^\]]+\]\s*/g,'').replace(/---PARTE---/g,'\n');
+      if(tl.includes('[PLAN_INICIO]')){
+        var div=document.createElement('div');div.className='msg ai';
+        var cnt=document.createElement('div');cnt.className='msg-content';
+        var planRaw=tl.split('[PLAN_INICIO]')[1].split('[PLAN_FIN]')[0].trim();
+        var before=tl.split('[PLAN_INICIO]')[0].trim();
+        if(before){var b=document.createElement('div');b.className='bubble';b.innerHTML=formatearCodigo(formatearTexto(before));cnt.appendChild(b);}
+        var pEl=document.createElement('div');pEl.innerHTML=renderPlan(planRaw);cnt.appendChild(pEl);
+        var bEl=document.createElement('div');bEl.innerHTML='<button class="btn-practicar" onclick="abrirPractica()">📝 Practicar ahora — Nivel '+nivelActual+'</button>';cnt.appendChild(bEl);
+        div.innerHTML='<div class="msg-avatar">✦</div>';div.appendChild(cnt);wrap.appendChild(div);
+      }else{addMessageSimple('ai',tl);}
+    }
+  });
+  setTimeout(function(){
+    var bEl=document.createElement('div');bEl.className='msg ai';
+    bEl.innerHTML='<div class="msg-avatar">✦</div><div class="msg-content"><button class="btn-practicar" onclick="abrirPractica()">📝 Continuar practicando — Nivel '+nivelActual+'</button></div>';
+    wrap.appendChild(bEl);scrollToBottom();
+  },200);
+}
+
+// ── SESIONES SIDEBAR ───────────────────────────────
+async function cargarSesiones(){
+  try{
+    var res=await fetch('/mis_sesiones');var datos=await res.json();
+    var list=document.getElementById('sidebarList');
+    if(!datos.length){list.innerHTML='<div class="sidebar-empty">Tus conversaciones aparecerán aquí automáticamente.</div>';return;}
+    list.innerHTML=datos.map(function(s){
+      var fecha=new Date(s.fecha_ultimo).toLocaleDateString('es-MX',{day:'2-digit',month:'short'});
+      var titulo=(s.titulo||'Conversación').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+      var matBadge=s.materia?'<span class="sesion-badge">'+s.materia+'</span>':'';
+      return'<div class="sesion-item" id="ses-'+s.sesion_id+'">'
+        +'<div class="sesion-item-content" onclick="verSesion(\''+s.sesion_id+'\',\''+titulo+'\')">'
+        +'<div class="sesion-titulo">'+(s.titulo||'Conversación')+'</div>'
+        +'<div class="sesion-meta"><span>'+fecha+'</span><span class="sesion-badge">'+s.total_mensajes+' msgs</span>'+matBadge+'</div></div>'
+        +'<div class="sesion-menu"><button class="sesion-menu-btn" onclick="toggleMenu(\'menu-'+s.sesion_id+'\',event)">⋯</button>'
+        +'<div class="sesion-dropdown" id="menu-'+s.sesion_id+'"><button onclick="eliminarSesion(\''+s.sesion_id+'\')">🗑️ Eliminar chat</button></div></div></div>';
+    }).join('');
+  }catch(e){console.error(e);}
+}
+function toggleMenu(menuId,event){
+  event.stopPropagation();
+  document.querySelectorAll('.sesion-dropdown').forEach(function(m){if(m.id!==menuId)m.classList.remove('open');});
+  var menu=document.getElementById(menuId);if(menu)menu.classList.toggle('open');
+}
+async function eliminarSesion(sid){
+  document.getElementById('modalEliminar').classList.add('active');
+  document.getElementById('modalEliminar').dataset.sid=sid;
+}
+async function confirmarEliminar(){
+  var sid=document.getElementById('modalEliminar').dataset.sid;
+  document.getElementById('modalEliminar').classList.remove('active');
+  try{
+    var res=await fetch('/eliminar_sesion/'+sid,{method:'DELETE'});
+    if(res.ok){
+      var el=document.getElementById('ses-'+sid);if(el)el.remove();
+      var list=document.getElementById('sidebarList');
+      if(!list.querySelector('.sesion-item'))list.innerHTML='<div class="sidebar-empty">Tus conversaciones aparecerán aquí automáticamente.</div>';
+      cargarRendimiento();
+    }
+  }catch(e){}
+}
+function cancelarEliminar(){document.getElementById('modalEliminar').classList.remove('active');}
+document.addEventListener('click',function(){document.querySelectorAll('.sesion-dropdown').forEach(function(m){m.classList.remove('open');});});
+
+async function cargarRendimiento(){
+  try{
+    var res=await fetch('/mi_rendimiento');var data=await res.json();
+    document.getElementById('totalSesiones').textContent=data.total_sesiones||0;
+    document.getElementById('totalPlanes').textContent=data.total_planes||0;
+    // Update sidebar user info
+    if(data.nombre){
+      var n=data.nombre.split(' ')[0];
+      var el=document.getElementById('sidebarNombre');
+      var av=document.getElementById('sidebarAvatar');
+      if(el)el.textContent=data.nombre;
+      if(av)av.textContent=n.charAt(0).toUpperCase();
+    }
+    var estilos=data.estilos_porcentaje||{};
+    var maxPct=Math.max.apply(null,Object.values(estilos).concat([1]));
+    ['VISUAL','AUDITIVO','LECTOR','KINESTÉSICO'].forEach(function(e){
+      var pct=estilos[e]||0;
+      var b=document.getElementById('bar-'+e);if(b)b.style.width=pct+'%';
+      var p=document.getElementById('pct-'+e);if(p)p.textContent=pct+'%';
+      var r=document.getElementById('row-'+e);
+      if(r){if(pct===maxPct&&pct>0)r.classList.add('estilo-active');else r.classList.remove('estilo-active');}
+    });
+  }catch(e){}
+}
+function cerrarModal(){document.getElementById('modalSesion').classList.remove('active');}
+function cerrarModalSiFuera(e){if(e.target===document.getElementById('modalSesion'))cerrarModal();}
+
+// ── PANEL NOTAS ────────────────────────────────────
+function toggleNotas(){
+  var panel=document.getElementById('notasPanel');panel.classList.toggle('open');
+  document.getElementById('btnNotas').style.color=panel.classList.contains('open')?'var(--accent)':'';
+}
+function formatearNota(pre,suf){
+  var ta=document.getElementById('notasEditor');
+  var s=ta.selectionStart,e=ta.selectionEnd;
+  var sel=ta.value.substring(s,e);
+  ta.value=ta.value.substring(0,s)+pre+(sel||'texto')+suf+ta.value.substring(e);ta.focus();
+}
+function insertarNota(texto){
+  var ta=document.getElementById('notasEditor');
+  var pos=ta.selectionStart;
+  ta.value=ta.value.substring(0,pos)+texto+ta.value.substring(pos);ta.focus();
+}
+function guardarNotas(){
+  localStorage.setItem('adaptlearn_notas',document.getElementById('notasEditor').value);
+  var btn=document.querySelector('.notas-guardar');var orig=btn.textContent;
+  btn.textContent='✅ Guardado';setTimeout(function(){btn.textContent=orig;},1500);
+}
+function limpiarNotas(){
+  document.getElementById('modalLimpiarNotas').classList.add('active');
+}
+function cancelarLimpiar(){
+  document.getElementById('modalLimpiarNotas').classList.remove('active');
+}
+function confirmarLimpiar(){
+  document.getElementById('notasEditor').value='';
+  localStorage.removeItem('adaptlearn_notas');
+  document.getElementById('modalLimpiarNotas').classList.remove('active');
+}
+function copiarDelChat(){
+  var msgs=document.querySelectorAll('.msg.ai .bubble');
+  if(!msgs.length){alert('No hay mensajes de la IA para copiar.');return;}
+  var ultimo=msgs[msgs.length-1].innerText.substring(0,500);
+  var ta=document.getElementById('notasEditor');
+  ta.value+=(ta.value?'\n\n':'')+'--- Desde el chat ---\n'+ultimo;
+  guardarNotas();
+}
+function exportarNota(){
+  var contenido=document.getElementById('notasEditor').value;
+  if(!contenido){alert('Las notas están vacías.');return;}
+  var blob=new Blob([contenido],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='AdaptLearn_Notas_'+new Date().toLocaleDateString('es-MX').replace(/\//g,'-')+'.txt';
+  a.click();
+}
+
+
+
+
+
+// ── NOTAS EXPORTAR ─────────────────────────────────
+function guardarYExportar(){
+  guardarNotas();
+  var contenido=document.getElementById('notasEditor').value.trim();
+  if(!contenido){alert('Las notas están vacías.');return;}
+  document.getElementById('modalExportar').classList.add('active');
+}
+function cerrarModalExportar(){
+  document.getElementById('modalExportar').classList.remove('active');
+}
+function exportarTxt(){
+  var contenido=document.getElementById('notasEditor').value;
+  var blob=new Blob([contenido],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='AdaptLearn_Notas_'+new Date().toLocaleDateString('es-MX').replace(/\//g,'-')+'.txt';
+  a.click();cerrarModalExportar();
+}
+function exportarPdf(){
+  var contenido=document.getElementById('notasEditor').value;
+  var fecha=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+  var w=window.open('','_blank');
+  var pdfHtml='<!DOCTYPE html><html><head><meta charset=\'UTF-8\'><title>Notas AdaptLearn<\/title>'
+    +'<style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#222;line-height:1.7}'
+    +'h1{color:#6c8fff;border-bottom:2px solid #6c8fff;padding-bottom:8px}'
+    +'.fecha{color:#888;font-size:13px;margin-bottom:24px}'
+    +'pre{background:#f5f5f5;padding:16px;border-radius:8px;white-space:pre-wrap;font-size:14px}'
+    +'<\/style><\/head><body>'
+    +'<h1>Notas AdaptLearn<\/h1>'
+    +'<div class=\'fecha\'>'+fecha+'<\/div>'
+    +'<pre>'+contenido.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'<\/pre>'
+    +'<\/body><\/html>';
+  w.document.write(pdfHtml);
+  w.document.close();
+  setTimeout(function(){w.print();},500);
+  cerrarModalExportar();
+}
+function exportarWord(){
+  var contenido=document.getElementById('notasEditor').value;
+  var fecha=new Date().toLocaleDateString('es-MX',{day:'2-digit',month:'long',year:'numeric'});
+  var htm='<html><head><meta charset=\'UTF-8\'><\/head><body>'
+    +'<h1 style=\'color:#6c8fff\'>Notas AdaptLearn<\/h1>'
+    +'<p style=\'color:#888;font-size:10pt\'>'+fecha+'<\/p>'
+    +'<p>'+contenido.split('\n').join('<\/p><p>')+'<\/p>'
+    +'<\/body><\/html>';
+  var blob=new Blob([htm],{type:'application/msword'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='AdaptLearn_Notas_'+new Date().toLocaleDateString('es-MX').replace(/\//g,'-')+'.doc';
+  a.click();cerrarModalExportar();
+}
+
+// ── USER MENU ──────────────────────────────────────
+function toggleUserMenu(){
+  event && event.stopPropagation();
+  var menu = document.getElementById('userMenu');
+  menu.classList.toggle('open');
+}
+function cerrarUserMenu(){
+  document.getElementById('userMenu').classList.remove('open');
+}
+document.addEventListener('click', function(e){
+  var menu = document.getElementById('userMenu');
+  var btn = document.getElementById('userFooterBtn');
+  if(menu && btn && !menu.contains(e.target) && !btn.contains(e.target)){
+    menu.classList.remove('open');
+  }
+});
+
+// ── TOGGLE SIDEBAR ────────────────────────────────
+function toggleSidebar(){
+  var sidebar = document.querySelector('.sidebar');
+  var btn = document.getElementById('btnToggleSidebar');
+  sidebar.classList.toggle('collapsed');
+  var collapsed = sidebar.classList.contains('collapsed');
+  btn.textContent = collapsed ? '▶' : '◀';
+  btn.title = collapsed ? 'Expandir panel' : 'Colapsar panel';
+  localStorage.setItem('adaptlearn_sidebar', collapsed ? '1' : '0');
+}
+
+// -- PANEL TEMA --
+function togglePanelTema(){
+  var p=document.getElementById('panelTema');
+  p.style.display=p.style.display==='none'?'block':'none';
+}
+document.addEventListener('click',function(e){
+  var panel=document.getElementById('panelTema');
+  var btn=document.getElementById('btnTema');
+  if(panel&&btn&&!panel.contains(e.target)&&!btn.contains(e.target)){
+    panel.style.display='none';
+  }
+});
+
+function aplicarModo(modo){
+  event && event.stopPropagation();
+  if(modo==='claro'){
+    document.body.classList.add('modo-claro');
+  } else {
+    document.body.classList.remove('modo-claro');
+  }
+  // Update toggle buttons
+  var btnO=document.getElementById('btnModoOscuro');
+  var btnC=document.getElementById('btnModoClaro');
+  if(btnO&&btnC){
+    if(modo==='claro'){
+      btnO.style.background='transparent'; btnO.style.color='var(--muted)'; btnO.style.fontWeight='500';
+      btnC.style.background='var(--accent)'; btnC.style.color='white'; btnC.style.fontWeight='600';
+    } else {
+      btnO.style.background='var(--accent)'; btnO.style.color='white'; btnO.style.fontWeight='600';
+      btnC.style.background='transparent'; btnC.style.color='var(--muted)'; btnC.style.fontWeight='500';
+    }
+  }
+  localStorage.setItem('adaptlearn_modo', modo);
+}
+
+function aplicarTema(accent,accent2){
+  event && event.stopPropagation();
+  document.documentElement.style.setProperty('--accent',accent);
+  document.documentElement.style.setProperty('--accent2',accent2);
+  // Update circle borders
+  document.querySelectorAll('#panelTema button[onclick^="aplicarTema"]').forEach(function(b){
+    b.style.border='2px solid transparent';
+  });
+  localStorage.setItem('adaptlearn_tema',JSON.stringify({accent:accent,accent2:accent2}));
+  var cp=document.getElementById('colorPicker');
+  if(cp)cp.value=accent;
+}
+
+function aplicarColorPersonalizado(color){
+  document.documentElement.style.setProperty('--accent',color);
+  document.documentElement.style.setProperty('--accent2',color);
+  localStorage.setItem('adaptlearn_tema',JSON.stringify({accent:color,accent2:color}));
+}
+
+// -- INIT --
+function cargarPreferencias(){
+  var tema=localStorage.getItem('adaptlearn_tema');
+  if(tema){
+    var t=JSON.parse(tema);
+    document.documentElement.style.setProperty('--accent',t.accent);
+    document.documentElement.style.setProperty('--accent2',t.accent2);
+  }
+  var modo=localStorage.getItem('adaptlearn_modo');
+  if(modo==='claro') document.body.classList.add('modo-claro');
+}
+cargarPreferencias(); // carga ANTES del render para evitar flash
+
+window.addEventListener('load',function(){
+  cargarSesiones();cargarRendimiento();
+  // Restore sidebar state
+  if(localStorage.getItem('adaptlearn_sidebar')==='1'){
+    var sidebar=document.querySelector('.sidebar');
+    var btn=document.getElementById('btnToggleSidebar');
+    if(sidebar){sidebar.classList.add('collapsed');btn.textContent='▶';btn.title='Expandir panel';}
+  }
+  var notas=localStorage.getItem('adaptlearn_notas');
+  if(notas)document.getElementById('notasEditor').value=notas;
+  // Sync mode buttons
+  var modo=localStorage.getItem('adaptlearn_modo')||'oscuro';
+  aplicarModo(modo);
+  var ta=document.getElementById('notasEditor');
+  if(ta)ta.addEventListener('input',function(){clearTimeout(ta._st);ta._st=setTimeout(guardarNotas,1500);});
+});
+</script>
+
+<!-- Modal confirmar limpiar notas -->
+<div class="modal-overlay" id="modalLimpiarNotas" onclick="cancelarLimpiar()">
+  <div class="modal" style="max-width:360px" onclick="event.stopPropagation()">
+    <div style="text-align:center;padding:8px 0">
+      <div style="font-size:38px;margin-bottom:12px">🗑️</div>
+      <h2 style="font-size:16px;font-weight:600;margin-bottom:8px">Limpiar notas</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:22px;line-height:1.6">¿Seguro que quieres borrar todas las notas?<br>Esta acción no se puede deshacer.</p>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="cancelarLimpiar()" style="padding:10px 22px;border-radius:10px;background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;cursor:pointer">Cancelar</button>
+        <button onclick="confirmarLimpiar()" style="padding:10px 22px;border-radius:10px;background:var(--red);border:none;color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer">Sí, limpiar</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

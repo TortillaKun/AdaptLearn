@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AdaptLearn — Aprende con IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#0e0f11;--surface:#16181c;--surface2:#1e2026;
+      --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+      --text:#e8e9ec;--muted:#7a7d87;
+      --accent:#6c8fff;--accent2:#a78bfa;--green:#4ade80;--yellow:#fbbf24;
+      --font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
+    }
+    html{scroll-behavior:smooth}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden}
+
+    /* ── CANVAS PARTICLES ── */
+    #particles{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+    /* ── NAV ── */
+    nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 40px;height:64px;display:flex;align-items:center;justify-content:space-between;transition:all .3s}
+    nav.scrolled{background:rgba(14,15,17,.85);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+    .nav-logo{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;letter-spacing:-.3px}
+    .nav-logo-icon{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 20px rgba(108,143,255,.4)}
+    .nav-links{display:flex;align-items:center;gap:8px}
+    .nav-link{padding:8px 16px;border-radius:8px;color:var(--muted);font-size:13px;font-weight:500;text-decoration:none;transition:all .2s}
+    .nav-link:hover{color:var(--text);background:var(--surface)}
+    .btn-nav-login{padding:8px 18px;background:var(--surface);border:1px solid var(--border2);border-radius:9px;color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;text-decoration:none}
+    .btn-nav-login:hover{border-color:var(--accent);color:var(--accent)}
+    .btn-nav-register{padding:8px 18px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:9px;color:white;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none;box-shadow:0 4px 14px rgba(108,143,255,.35)}
+    .btn-nav-register:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(108,143,255,.45)}
+
+    /* ── HERO ── */
+    .hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 20px}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(108,143,255,.1);border:1px solid rgba(108,143,255,.25);border-radius:20px;font-size:12px;font-family:var(--mono);color:var(--accent);margin-bottom:28px;opacity:0}
+    .hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+    .hero-title{font-size:clamp(42px,7vw,88px);font-weight:800;line-height:1.05;letter-spacing:-2px;margin-bottom:22px;opacity:0}
+    .hero-title .line1{display:block}
+    .hero-title .gradient-text{background:linear-gradient(135deg,#fff 30%,var(--accent) 60%,var(--accent2) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .hero-sub{font-size:17px;color:var(--muted);line-height:1.7;max-width:560px;margin:0 auto 40px;opacity:0;font-weight:400}
+    .hero-sub strong{color:var(--text);font-weight:500}
+    .hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;opacity:0;margin-bottom:60px}
+    .btn-primary{padding:14px 32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:white;font-family:var(--font);font-size:15px;font-weight:600;cursor:pointer;transition:all .25s;text-decoration:none;box-shadow:0 4px 20px rgba(108,143,255,.4)}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(108,143,255,.5)}
+    .btn-secondary{padding:14px 32px;background:var(--surface);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-family:var(--font);font-size:15px;font-weight:500;cursor:pointer;transition:all .25s;text-decoration:none}
+    .btn-secondary:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+    .hero-stats{display:flex;gap:40px;justify-content:center;opacity:0;flex-wrap:wrap}
+    .stat{text-align:center}
+    .stat-num{font-size:28px;font-weight:700;font-family:var(--mono);background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .stat-label{font-size:12px;color:var(--muted);margin-top:3px}
+
+    /* ── SCROLL INDICATOR ── */
+    .scroll-hint{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;opacity:0;color:var(--muted);font-size:11px;font-family:var(--mono)}
+    .scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--accent),transparent);animation:scrollAnim 2s ease-in-out infinite}
+    @keyframes scrollAnim{0%,100%{opacity:.3;transform:scaleY(.8)}50%{opacity:1;transform:scaleY(1)}}
+
+    /* ── ORBS BACKGROUND ── */
+    .orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.15;pointer-events:none;z-index:0}
+    .orb1{width:600px;height:600px;background:radial-gradient(circle,var(--accent),transparent);top:-100px;right:-100px}
+    .orb2{width:500px;height:500px;background:radial-gradient(circle,var(--accent2),transparent);bottom:-100px;left:-100px}
+    .orb3{width:300px;height:300px;background:radial-gradient(circle,var(--green),transparent);top:50%;left:50%;transform:translate(-50%,-50%)}
+
+    /* ── FEATURES ── */
+    .section{position:relative;z-index:1;padding:100px 40px}
+    .section-tag{display:inline-block;font-size:11px;font-family:var(--mono);color:var(--accent);background:rgba(108,143,255,.1);border:1px solid rgba(108,143,255,.2);padding:4px 12px;border-radius:20px;margin-bottom:16px;text-transform:uppercase;letter-spacing:1px}
+    .section-title{font-size:clamp(28px,4vw,46px);font-weight:700;letter-spacing:-1px;line-height:1.2;margin-bottom:16px}
+    .section-sub{font-size:16px;color:var(--muted);line-height:1.7;max-width:520px}
+    .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;max-width:1100px;margin:60px auto 0}
+    .feature-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all .3s;opacity:0;transform:translateY(30px);position:relative;overflow:hidden}
+    .feature-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity .3s}
+    .feature-card:hover{border-color:var(--border2);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,.3)}
+    .feature-card:hover::before{opacity:1}
+    .feature-icon{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,rgba(108,143,255,.15),rgba(167,139,250,.15));border:1px solid rgba(108,143,255,.2);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px}
+    .feature-title{font-size:16px;font-weight:600;margin-bottom:8px}
+    .feature-desc{font-size:13px;color:var(--muted);line-height:1.7}
+
+    /* ── HOW IT WORKS ── */
+    .how-section{position:relative;z-index:1;padding:100px 40px;background:linear-gradient(to bottom,transparent,rgba(22,24,28,.8),transparent)}
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;max-width:900px;margin:60px auto 0;position:relative}
+    .steps::before{content:'';position:absolute;top:32px;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,var(--accent),var(--accent2),transparent);opacity:.4}
+    .step{text-align:center;padding:0 20px;opacity:0;transform:translateY(20px)}
+    .step-num{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 20px;box-shadow:0 8px 24px rgba(108,143,255,.35)}
+    .step-title{font-size:15px;font-weight:600;margin-bottom:8px}
+    .step-desc{font-size:13px;color:var(--muted);line-height:1.6}
+
+    /* ── VARK SECTION ── */
+    .vark-section{position:relative;z-index:1;padding:100px 40px}
+    .vark-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:700px;margin:50px auto 0}
+    .vark-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;display:flex;align-items:flex-start;gap:0;opacity:0;transform:scale(.95);transition:all .3s}
+    .vark-card:hover{border-color:var(--border2);transform:scale(1.02)}
+    .vark-emoji{font-size:32px}
+    .vark-name{font-size:14px;font-weight:600;margin-bottom:4px}
+    .vark-desc{font-size:12px;color:var(--muted);line-height:1.5}
+    .vark-bar{height:3px;border-radius:2px;margin-top:10px;transition:width 1s ease}
+
+    /* ── CTA ── */
+    .cta-section{position:relative;z-index:1;padding:120px 40px;text-align:center}
+    .cta-card{max-width:700px;margin:0 auto;background:linear-gradient(135deg,rgba(108,143,255,.08),rgba(167,139,250,.08));border:1px solid rgba(108,143,255,.2);border-radius:24px;padding:60px 40px;position:relative;overflow:hidden;opacity:0}
+    .cta-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at center,rgba(108,143,255,.05),transparent 60%);animation:rotateBg 8s linear infinite}
+    @keyframes rotateBg{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+    .cta-title{font-size:clamp(28px,4vw,42px);font-weight:700;letter-spacing:-1px;margin-bottom:16px;position:relative}
+    .cta-sub{font-size:16px;color:var(--muted);margin-bottom:36px;position:relative;line-height:1.7}
+    .cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
+
+    /* ── FOOTER ── */
+    footer{position:relative;z-index:1;padding:40px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px}
+    .footer-logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600}
+    .footer-text{font-size:12px;color:var(--muted);font-family:var(--mono)}
+
+    /* ── CHAT MOCKUP ── */
+    .mockup-wrap{position:relative;z-index:1;max-width:600px;margin:50px auto 0;opacity:0}
+    .mockup{background:var(--surface);border:1px solid var(--border2);border-radius:20px;overflow:hidden;box-shadow:0 40px 80px rgba(0,0,0,.5)}
+    .mockup-bar{background:var(--surface2);padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+    .mockup-dot{width:10px;height:10px;border-radius:50%}
+    .mockup-msgs{padding:20px;display:flex;flex-direction:column;gap:12px}
+    .mockup-msg{display:flex;gap:10px;align-items:flex-start}
+    .mockup-msg.user{flex-direction:row-reverse}
+    .mockup-avatar{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
+    .mockup-avatar.ai{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+    .mockup-avatar.user-av{background:#1e2a45;border:1px solid rgba(108,143,255,.2)}
+    .mockup-bubble{padding:10px 14px;border-radius:12px;font-size:12px;line-height:1.6;max-width:75%}
+    .mockup-bubble.ai{background:#1a1c21;border:1px solid var(--border)}
+    .mockup-bubble.user{background:#1e2a45;border:1px solid rgba(108,143,255,.2);color:#d4deff}
+    .typing-indicator{display:flex;gap:4px;padding:8px 0}
+    .typing-dot{width:5px;height:5px;border-radius:50%;background:var(--muted);animation:typing 1.2s infinite}
+    .typing-dot:nth-child(2){animation-delay:.2s}
+    .typing-dot:nth-child(3){animation-delay:.4s}
+    @keyframes typing{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+    @media(max-width:600px){
+      nav{padding:0 20px}
+      .section,.how-section,.vark-section,.cta-section{padding:70px 20px}
+      .vark-grid{grid-template-columns:1fr}
+      .steps::before{display:none}
+      footer{flex-direction:column;text-align:center}
+    }
+  </style>
+
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">
+    <div class="nav-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+    AdaptLearn
+  </div>
+  <div class="nav-links">
+    <a href="#features" class="nav-link">Funciones</a>
+    <a href="#como" class="nav-link">¿Cómo funciona?</a>
+    <a href="/acceder" class="btn-nav-login">Iniciar sesión</a>
+    <a href="/acceder?tab=registro" class="btn-nav-register">Crear cuenta gratis</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <h1 class="hero-title">
+    <span class="line1">Aprende cualquier tema</span>
+    <span class="gradient-text">a tu propio ritmo</span>
+  </h1>
+  <p class="hero-sub">
+    AdaptLearn usa <strong>inteligencia artificial</strong> para crear planes de estudio, ejercicios progresivos y explicaciones personalizadas según tu estilo de aprendizaje.
+  </p>
+  <div class="hero-btns">
+    <a href="/acceder" class="btn-primary">Empezar gratis</a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num" data-target="5">0</div><div class="stat-label">Niveles progresivos</div></div>
+    <div class="stat"><div class="stat-num" data-target="4">0</div><div class="stat-label">Estilos VARK</div></div>
+    <div class="stat"><div class="stat-num" data-target="10">0</div><div class="stat-label">Materias disponibles</div></div>
+    <div class="stat"><div class="stat-num" data-target="100">0</div><div class="stat-label">% Personalizado</div></div>
+  </div>
+  <div class="scroll-hint">
+    <div class="scroll-line"></div>
+    scroll
+  </div>
+</section>
+
+<!-- CHAT MOCKUP -->
+<div style="position:relative;z-index:1;padding:0 20px">
+  <div class="mockup-wrap" id="mockup">
+    <div class="mockup">
+      <div class="mockup-bar">
+        <div class="mockup-dot" style="background:#f87171"></div>
+        <div class="mockup-dot" style="background:#fbbf24"></div>
+        <div class="mockup-dot" style="background:#4ade80"></div>
+        <span style="margin-left:8px;font-size:11px;color:var(--muted);font-family:var(--mono)">AdaptLearn Chat</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--green);font-family:var(--mono)">● IA activa</span>
+      </div>
+      <div class="mockup-msgs">
+        <div class="mockup-msg">
+          <div class="mockup-avatar user-av" style="font-size:11px;font-weight:600;color:var(--accent)">TÚ</div>
+          <div class="mockup-bubble user">Quiero aprender medicina relacionada con el fútbol</div>
+        </div>
+        <div class="mockup-msg">
+          <div class="mockup-avatar ai" style="font-size:13px;font-weight:700;color:white">A</div>
+          <div class="mockup-bubble ai">¡Perfecto! He detectado tu estilo <strong style="color:var(--accent)">kinestésico</strong>. Voy a crear un plan de Anatomía usando ejemplos de fútbol </div>
+        </div>
+        <div class="mockup-msg">
+          <div class="mockup-avatar ai" style="font-size:13px;font-weight:700;color:white">A</div>
+          <div class="mockup-bubble ai">
+            <strong style="color:var(--accent2)">Ejercicio Nivel 1 · Anatomía</strong><br>
+            ¿Qué músculo se lesiona frecuentemente cuando un jugador hace un sprint explosivo?
+            <div style="margin-top:8px;display:flex;gap:6px">
+              <span style="padding:3px 10px;background:rgba(108,143,255,.15);border-radius:6px;font-size:11px;color:var(--accent)">Verificar</span>
+              <span style="padding:3px 10px;background:rgba(251,191,36,.1);border-radius:6px;font-size:11px;color:var(--yellow)">Pista</span>
+            </div>
+          </div>
+        </div>
+        <div class="mockup-msg">
+          <div class="mockup-avatar ai" style="font-size:13px;font-weight:700;color:white">A</div>
+          <div class="mockup-bubble ai">
+            <div class="typing-indicator">
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+              <div class="typing-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div style="max-width:1100px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:20px">
+      <span class="section-tag">Funcionalidades</span>
+      <h2 class="section-title">Todo lo que necesitas<br>para aprender mejor</h2>
+      <p class="section-sub" style="margin:0 auto">Un sistema completo que se adapta a ti, no al revés.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" width="22" height="22"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg></div>
+        <div class="feature-title">IA Adaptativa</div>
+        <div class="feature-desc">El sistema detecta automáticamente tu estilo de aprendizaje VARK y ajusta las explicaciones, ejercicios y materiales para ti.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" width="22" height="22"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+        <div class="feature-title">Niveles Progresivos</div>
+        <div class="feature-desc">5 niveles de dificultad — de principiante a experto. Avanzas automáticamente al obtener 80% o más en cada ejercicio.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" width="22" height="22"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+        <div class="feature-title">Personalizado por Interés</div>
+        <div class="feature-desc">¿Te gusta el fútbol? Los ejercicios de matemáticas usarán estadísticas de fútbol. Tu aprendizaje, a tu manera.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" width="22" height="22"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+        <div class="feature-title">Planes de Estudio</div>
+        <div class="feature-desc">Genera planes de 4 semanas para cualquier materia con actividades concretas, fuentes académicas verificadas y metas claras.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" width="22" height="22"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><circle cx="12" cy="12" r="4"/></svg></div>
+        <div class="feature-title">Pistas Progresivas</div>
+        <div class="feature-desc">¿Atascado? El sistema te da pistas de forma gradual: desde orientación general hasta la solución completa paso a paso.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5" width="22" height="22"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+        <div class="feature-title">Notas Inteligentes</div>
+        <div class="feature-desc">Panel de notas lateral integrado. Copia fragmentos del chat, escribe tus apuntes y exporta en .txt, .pdf o Word.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="como">
+  <div style="max-width:1100px;margin:0 auto;text-align:center">
+    <span class="section-tag">Proceso</span>
+    <h2 class="section-title">Así funciona AdaptLearn</h2>
+    <p class="section-sub" style="margin:0 auto">Cuatro pasos simples para transformar cómo estudias.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Crea tu cuenta</div>
+        <div class="step-desc">Regístrate en segundos e indica tus materias de interés y tu hobby favorito.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">La IA te analiza</div>
+        <div class="step-desc">Mientras chateas, AdaptLearn detecta tu perfil VARK y ajusta el contenido automáticamente.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Practica con niveles</div>
+        <div class="step-desc">Resuelve ejercicios del tema que elijas. Con cada acierto subes de nivel y los retos se vuelven más interesantes.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-title">Mide tu progreso</div>
+        <div class="step-desc">El panel de rendimiento muestra tu evolución por materia, sesiones completadas y estilo dominante.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- VARK -->
+<section class="vark-section">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center" class="vark-inner">
+    <div>
+      <span class="section-tag">Modelo VARK</span>
+      <h2 class="section-title">Aprende como<br>tú lo haces</h2>
+      <p class="section-sub">El modelo VARK clasifica tu estilo de aprendizaje. AdaptLearn lo detecta automáticamente y personaliza cada respuesta, ejercicio y plan de estudio.</p>
+    </div>
+    <div class="vark-grid" style="margin:0">
+      <div class="vark-card">
+        
+        <div>
+          <div class="vark-name">Visual</div>
+          <div class="vark-desc">Aprende con diagramas, esquemas y representaciones gráficas</div>
+          <div class="vark-bar" style="background:linear-gradient(90deg,var(--accent),var(--accent2));width:0%" data-width="85%"></div>
+        </div>
+      </div>
+      <div class="vark-card">
+        
+        <div>
+          <div class="vark-name">Auditivo</div>
+          <div class="vark-desc">Entiende mejor escuchando explicaciones verbales detalladas</div>
+          <div class="vark-bar" style="background:linear-gradient(90deg,var(--green),#22c55e);width:0%" data-width="70%"></div>
+        </div>
+      </div>
+      <div class="vark-card">
+        
+        <div>
+          <div class="vark-name">Lector</div>
+          <div class="vark-desc">Prefiere texto, definiciones y materiales escritos detallados</div>
+          <div class="vark-bar" style="background:linear-gradient(90deg,var(--yellow),#f59e0b);width:0%" data-width="75%"></div>
+        </div>
+      </div>
+      <div class="vark-card">
+        
+        <div>
+          <div class="vark-name">Kinestésico</div>
+          <div class="vark-desc">Aprende haciendo, practicando y con ejercicios paso a paso</div>
+          <div class="vark-bar" style="background:linear-gradient(90deg,#f87171,#ef4444);width:0%" data-width="90%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-card" id="ctaCard">
+    <h2 class="cta-title">¿Listo para aprender<br><span class="gradient-text">de forma inteligente?</span></h2>
+    <p class="cta-sub">Únete a AdaptLearn hoy. Es gratis, rápido y completamente personalizado para ti.</p>
+    <div class="cta-btns">
+      <a href="/acceder?tab=registro" class="btn-primary" style="font-size:16px;padding:16px 36px">Crear cuenta gratis</a>
+      <a href="/acceder" class="btn-secondary" style="font-size:16px;padding:16px 36px">Iniciar sesión</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <div class="nav-logo-icon" style="width:26px;height:26px"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg></div>
+    AdaptLearn
+  </div>
+  <div class="footer-text">Proyecto académico · Ingeniería en Software · UAS</div>
+  
+</footer>
+
+<script>
+gsap.registerPlugin(ScrollTrigger);
+
+// ── PARTICLES CANVAS ──────────────────────────────
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [];
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * W;
+    this.y = Math.random() * H;
+    this.size = Math.random() * 1.5 + .3;
+    this.speedX = (Math.random() - .5) * .4;
+    this.speedY = (Math.random() - .5) * .4;
+    this.opacity = Math.random() * .5 + .1;
+    this.color = Math.random() > .5 ? '108,143,255' : '167,139,250';
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    if(this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+  }
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(${this.color},${this.opacity})`;
+    ctx.fill();
+  }
+}
+
+for(let i = 0; i < 80; i++) particles.push(new Particle());
+
+function connectParticles() {
+  for(let i = 0; i < particles.length; i++) {
+    for(let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x;
+      const dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < 120) {
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(108,143,255,${.15 * (1 - dist/120)})`;
+        ctx.lineWidth = .5;
+        ctx.moveTo(particles[i].x, particles[i].y);
+        ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+function animateParticles() {
+  ctx.clearRect(0, 0, W, H);
+  particles.forEach(p => { p.update(); p.draw(); });
+  connectParticles();
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ── NAVBAR SCROLL ─────────────────────────────────
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+});
+
+// ── HERO ANIMATIONS ───────────────────────────────
+const tl = gsap.timeline({ delay: .2 });
+tl.to('.hero-title',   { opacity:1, y:0, duration:.7, ease:'power3.out' })
+  .to('.hero-sub',     { opacity:1, y:0, duration:.6, ease:'power3.out' }, '-=.4')
+  .to('.hero-btns',    { opacity:1, y:0, duration:.6, ease:'power3.out' }, '-=.3')
+  .to('.hero-stats',   { opacity:1, y:0, duration:.6, ease:'power3.out' }, '-=.3')
+  .to('.scroll-hint',  { opacity:1, duration:.5 }, '-=.2');
+
+// ── COUNTER ANIMATION ─────────────────────────────
+document.querySelectorAll('.stat-num').forEach(el => {
+  const target = parseInt(el.dataset.target);
+  gsap.to({ val: 0 }, {
+    val: target,
+    duration: 2,
+    delay: 1.2,
+    ease: 'power2.out',
+    onUpdate: function() {
+      el.textContent = Math.round(this.targets()[0].val) + (target === 100 ? '%' : '+');
+    }
+  });
+});
+
+// ── MOCKUP ────────────────────────────────────────
+gsap.to('#mockup', {
+  scrollTrigger: { trigger: '#mockup', start: 'top 80%' },
+  opacity: 1, y: 0, duration: .9, ease: 'power3.out'
+});
+
+// ── FEATURE CARDS ─────────────────────────────────
+gsap.utils.toArray('.feature-card').forEach((card, i) => {
+  gsap.to(card, {
+    scrollTrigger: { trigger: card, start: 'top 85%' },
+    opacity: 1, y: 0, duration: .6, delay: i * .1, ease: 'power3.out'
+  });
+});
+
+// ── STEPS ─────────────────────────────────────────
+gsap.utils.toArray('.step').forEach((step, i) => {
+  gsap.to(step, {
+    scrollTrigger: { trigger: step, start: 'top 85%' },
+    opacity: 1, y: 0, duration: .6, delay: i * .15, ease: 'power3.out'
+  });
+});
+
+// ── VARK CARDS ────────────────────────────────────
+gsap.utils.toArray('.vark-card').forEach((card, i) => {
+  gsap.to(card, {
+    scrollTrigger: { trigger: card, start: 'top 85%' },
+    opacity: 1, scale: 1, duration: .5, delay: i * .1, ease: 'back.out(1.5)'
+  });
+  // Animate bars
+  const bar = card.querySelector('.vark-bar');
+  if(bar) {
+    ScrollTrigger.create({
+      trigger: card,
+      start: 'top 80%',
+      onEnter: () => { bar.style.width = bar.dataset.width; }
+    });
+  }
+});
+
+// ── CTA ───────────────────────────────────────────
+gsap.to('#ctaCard', {
+  scrollTrigger: { trigger: '#ctaCard', start: 'top 80%' },
+  opacity: 1, y: 0, duration: .8, ease: 'power3.out'
+});
+
+// ── SMOOTH ANCHOR SCROLL ──────────────────────────
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if(target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ── ORB MOUSE PARALLAX ────────────────────────────
+document.addEventListener('mousemove', e => {
+  const x = (e.clientX / window.innerWidth - .5) * 20;
+  const y = (e.clientY / window.innerHeight - .5) * 20;
+  gsap.to('.orb1', { x: x * .5, y: y * .5, duration: 2, ease: 'power1.out' });
+  gsap.to('.orb2', { x: -x * .3, y: -y * .3, duration: 2, ease: 'power1.out' });
+});
+</script>
+</body>
+</html>
