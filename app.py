@@ -1,5 +1,6 @@
 from flask import Flask, render_template, session, redirect, url_for
-from flask_mysqldb import MySQL
+import pymysql
+import pymysql.cursors
 from authlib.integrations.flask_client import OAuth
 from config import Config
 from seguridad import aplicar_seguridad
@@ -7,9 +8,7 @@ from seguridad import aplicar_seguridad
 app = Flask(__name__)
 app.config.from_object(Config)
 
-mysql = MySQL(app)
 oauth = OAuth(app)
-
 oauth.register(
     name='google',
     client_id=app.config.get('GOOGLE_CLIENT_ID'),
@@ -18,8 +17,21 @@ oauth.register(
     client_kwargs={'scope': 'openid email profile'}
 )
 
-# ── APLICAR SEGURIDAD ──────────────────────────────
 aplicar_seguridad(app)
+
+# ── Conexión PyMySQL ───────────────────────────────
+def get_db():
+    return pymysql.connect(
+        host=app.config['MYSQL_HOST'],
+        user=app.config['MYSQL_USER'],
+        password=app.config['MYSQL_PASSWORD'],
+        database=app.config['MYSQL_DB'],
+        charset='utf8mb4',
+        cursorclass=pymysql.cursors.Cursor,
+        autocommit=False
+    )
+
+app.get_db = get_db
 
 @app.route('/')
 def index():
@@ -50,4 +62,4 @@ app.register_blueprint(ejercicios_bp)
 app.register_blueprint(chat_bp)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)

@@ -1,65 +1,57 @@
 from flask import Blueprint, request, jsonify, session, redirect, url_for, render_template
 from flask_bcrypt import Bcrypt
-from seguridad import (rate_limit, sanitizar_input, validar_email,
-                        validar_request_json, detectar_sql_injection, login_requerido)
+from seguridad import rate_limit, sanitizar_input, validar_email, validar_request_json, login_requerido
 
 auth_bp = Blueprint('auth', __name__)
 bcrypt = Bcrypt()
 
-def get_mysql():
-    from app import mysql
-    return mysql
+def get_db():
+    from app import get_db
+    return get_db()
 
-# ── REGISTRO ──────────────────────────────────────
 @auth_bp.route('/registro', methods=['POST'])
-@rate_limit(max_requests=5, window=60)   # max 5 registros por minuto por IP
+@rate_limit(max_requests=5, window=60)
 def registro():
-    # Validar SQL injection en todo el body
     valido, error = validar_request_json()
     if not valido:
-        return jsonify({'error': 'Input inválido detectado'}), 400
+        return jsonify({'error': 'Input inválido'}), 400
 
-    datos = request.json or {}
-
+    datos           = request.json or {}
     nombre_completo = sanitizar_input(datos.get('nombre', ''), max_len=100)
     email           = sanitizar_input(datos.get('email', ''), max_len=100)
     password        = datos.get('password', '')
     interes         = sanitizar_input(datos.get('interes', ''), max_len=50)
 
-    # Validaciones
     if not nombre_completo or not email or not password:
         return jsonify({'error': 'Todos los campos son requeridos'}), 400
     if not validar_email(email):
         return jsonify({'error': 'Correo electrónico inválido'}), 400
     if len(password) < 8:
         return jsonify({'error': 'La contraseña debe tener mínimo 8 caracteres'}), 400
-    if len(password) > 128:
-        return jsonify({'error': 'Contraseña demasiado larga'}), 400
 
     partes   = nombre_completo.strip().split(' ', 1)
     nombre   = partes[0]
     apellido = partes[1] if len(partes) > 1 else ''
     password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
 
-    mysql = get_mysql()
-    cur = mysql.connection.cursor()
+    con = get_db()
+    cur = con.cursor()
     try:
-        cur.execute("""
-            INSERT INTO usuarios (nombre, apellido, email, password, interes)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (nombre, apellido, email.lower(), password_hash, interes))
-        mysql.connection.commit()
+        cur.execute("""INSERT INTO usuarios (nombre, apellido, email, password, interes)
+                       VALUES (%s, %s, %s, %s, %s)""",
+                    (nombre, apellido, email.lower(), password_hash, interes))
+        con.commit()
         return jsonify({'mensaje': f'Cuenta creada para {nombre}'}), 201
-    except Exception as e:
+    except Exception:
         return jsonify({'error': 'El correo ya está registrado'}), 400
     finally:
         cur.close()
+        con.close()
 
-# ── LOGIN ─────────────────────────────────────────
 @auth_bp.route('/login', methods=['POST'])
-@rate_limit(max_requests=10, window=60)  # max 10 intentos por minuto por IP
+@rate_limit(max_requests=10, window=60)
 def login():
-    valido, error = validar_request_json()
+    valido, _ = validar_request_json()
     if not valido:
         return jsonify({'error': 'Input inválido'}), 400
 
@@ -69,33 +61,26 @@ def login():
 
     if not email or not password:
         return jsonify({'error': 'Correo y contraseña requeridos'}), 400
-    if not validar_email(email):
-        return jsonify({'error': 'Formato de correo inválido'}), 400
 
-    mysql = get_mysql()
-    cur = mysql.connection.cursor()
-    # Usar parámetros para prevenir SQL injection (ya lo hace MySQLdb, pero explícito)
-    cur.execute("SELECT id, nombre, password, interes FROM usuarios WHERE email = %s",
-                (email.lower(),))
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("SELECT id, nombre, password, interes FROM usuarios WHERE email = %s", (email.lower(),))
     usuario = cur.fetchone()
     cur.close()
+    con.close()
 
     if usuario and bcrypt.check_password_hash(usuario[2], password):
         session['usuario_id'] = usuario[0]
         session['nombre']     = usuario[1]
         session['interes']    = usuario[3]
-        session.permanent     = True  # sesión persistente
         return jsonify({
             'mensaje':  f'Bienvenido {usuario[1]}',
             'nombre':   usuario[1],
             'interes':  usuario[3],
             'redirect': '/chat'
         }), 200
-    else:
-        # Mismo mensaje para usuario no existe o contraseña incorrecta (no revelar cuál)
-        return jsonify({'error': 'Correo o contraseña incorrectos'}), 401
+    return jsonify({'error': 'Correo o contraseña incorrectos'}), 401
 
-# ── GOOGLE AUTH ───────────────────────────────────
 @auth_bp.route('/login/google')
 def login_google():
     from app import oauth
@@ -105,7 +90,7 @@ def login_google():
 @auth_bp.route('/auth/google')
 def auth_google():
     from app import oauth
-    token = oauth.google.authorize_access_token()
+    token     = oauth.google.authorize_access_token()
     user_info = token.get('userinfo')
     if not user_info:
         return redirect(url_for('index'))
@@ -116,8 +101,8 @@ def auth_google():
     nombre          = partes[0]
     apellido        = partes[1] if len(partes) > 1 else ''
 
-    mysql = get_mysql()
-    cur = mysql.connection.cursor()
+    con = get_db()
+    cur = con.cursor()
     cur.execute("SELECT id, nombre, interes FROM usuarios WHERE email = %s", (email.lower(),))
     usuario = cur.fetchone()
 
@@ -125,19 +110,18 @@ def auth_google():
         session['usuario_id'] = usuario[0]
         session['nombre']     = usuario[1]
         session['interes']    = usuario[2]
-        cur.close()
+        cur.close(); con.close()
         if not usuario[2]:
             return redirect(url_for('auth.completar_perfil'))
         return redirect(url_for('chat'))
     else:
         password_dummy = bcrypt.generate_password_hash('google_auth_dummy').decode('utf-8')
-        cur.execute("""
-            INSERT INTO usuarios (nombre, apellido, email, password, interes)
-            VALUES (%s, %s, %s, %s, %s)
-        """, (nombre, apellido, email.lower(), password_dummy, ''))
-        mysql.connection.commit()
+        cur.execute("""INSERT INTO usuarios (nombre, apellido, email, password, interes)
+                       VALUES (%s, %s, %s, %s, %s)""",
+                    (nombre, apellido, email.lower(), password_dummy, ''))
+        con.commit()
         user_id = cur.lastrowid
-        cur.close()
+        cur.close(); con.close()
         session['usuario_id'] = user_id
         session['nombre']     = nombre
         session['interes']    = ''
@@ -159,11 +143,11 @@ def guardar_interes():
     if not interes:
         return jsonify({'error': 'Interés requerido'}), 400
 
-    usuario_id = session['usuario_id']
-    mysql = get_mysql()
-    cur = mysql.connection.cursor()
-    cur.execute("UPDATE usuarios SET interes = %s WHERE id = %s", (interes, usuario_id))
-    mysql.connection.commit()
-    cur.close()
+    con = get_db()
+    cur = con.cursor()
+    cur.execute("UPDATE usuarios SET interes = %s WHERE id = %s",
+                (interes, session['usuario_id']))
+    con.commit()
+    cur.close(); con.close()
     session['interes'] = interes
-    return jsonify({'mensaje': 'Perfil completado con éxito', 'redirect': '/chat'}), 200
+    return jsonify({'mensaje': 'Perfil completado', 'redirect': '/chat'}), 200

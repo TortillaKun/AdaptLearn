@@ -1,5 +1,8 @@
 flask
-flask-mysqldb
+pymysql
 flask-bcrypt
 authlib
 requests
+groq
+gunicorn
+cryptography
